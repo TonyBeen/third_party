@@ -214,8 +214,7 @@ public:
 	{
 		IS_RANDOM(Rnd_It, "RaptorQ::Encoder");
 		IS_FORWARD(Fwd_It, "RaptorQ::Encoder");
-		auto _alignment = sizeof(typename
-									std::iterator_traits<Rnd_It>::value_type);
+		auto _alignment = sizeof(typename std::iterator_traits<Rnd_It>::value_type);
 		UNUSED(_alignment);	// used only for asserts
 		assert(_symbol_size >= _alignment &&
 						"RaptorQ: symbol_size must be >= alignment");

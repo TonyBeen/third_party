@@ -18,7 +18,7 @@
 # along with libRaptorQ.  If not, see <http://www.gnu.org/licenses/>.
 
 cmake_minimum_required (VERSION 2.8.12)
-project (libRaptorQ)
+project(libRaptorQ)
 enable_language(CXX)
 enable_language(C)
 
@@ -36,14 +36,14 @@ endif()
 
 include(GNUInstallDirs)
 
-option(DYNAMIC_LIB "Build dynamic library" ON)
+option(DYNAMIC_LIB "Build dynamic library" OFF)
 option(STATIC_LIB "Build static library" ON)
 option(CLANG_STDLIB "Use clang's libc++" OFF)
 
 # defaults: only enable LTO/PROFILING with known compielrs
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
    option(LTO "Link Time Optimization" ON)
-   option(PROFILING "Profiling: speedup library" ON)
+   option(PROFILING "Profiling: speedup library" OFF)
 else()
    option(LTO "Link Time Optimization" OFF)
    option(PROFILING "Profiling: speedup library" OFF)
@@ -113,20 +113,21 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(Threads REQUIRED)
-find_package(git)
-find_package(eigen REQUIRED)
-include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
+# find_package(git)
+# find_package(eigen REQUIRED)
+# add_subdirectory(external/eigen3)
+set(EIGEN3_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/eigen3/)
 
 # LATEX documentation
-add_subdirectory(${CMAKE_SOURCE_DIR}/doc)
+# add_subdirectory(${CMAKE_SOURCE_DIR}/doc)
 
 
-if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.git/ AND GIT_FOUND)
-    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --sq HEAD OUTPUT_VARIABLE RQ_SEED)
-else()
-    set(RQ_SEED RaptorQ_nongit_v${RQ_VERSION})
-    message(WARNING "Not inside a git repository. Compiler seed is now constant.")
-endif()
+# if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.git/ AND GIT_FOUND)
+#     execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --sq HEAD OUTPUT_VARIABLE RQ_SEED)
+# else()
+#     set(RQ_SEED RaptorQ_nongit_v${RQ_VERSION})
+#     message(WARNING "Not inside a git repository. Compiler seed is now constant.")
+# endif()
 set(DETERMINISTIC -frandom-seed=${RQ_SEED})
 
 if(CMAKE_SYSTEM_NAME MATCHES "Windows")
@@ -134,8 +135,6 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
 else()
     add_definitions(-DRQ_UNIX)
 endif()
-
-
 
 SET(SOURCES	src/Precode_Matrix_solver.cpp
 		src/Precode_Matrix.cpp
@@ -254,6 +253,9 @@ endif()
 # build the static library
 if(STATIC_LIB MATCHES "ON")
     add_library(RaptorQ_Static STATIC ${SOURCES} ${HEADERS})
+    add_library(RaptorQ::RaptorQ_Static ALIAS RaptorQ_Static)
+    add_definitions(-I${EIGEN3_INCLUDE_DIR})
+
     if(NOT CMAKE_SYSTEM_NAME MATCHES "Windows")
         set_target_properties(RaptorQ_Static PROPERTIES OUTPUT_NAME RaptorQ.${RQ_ABI})
     endif()
@@ -276,24 +278,24 @@ if(STATIC_LIB MATCHES "ON")
     set_property(TARGET RaptorQ_Static PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
 	# make the library deterministic (only on *nix)
-    add_executable(make_deterministic src/deterministic.cpp)
-    target_compile_options(
-        make_deterministic PRIVATE
-        ${CXX_COMPILER_FLAGS}
-    )
-    target_link_libraries(make_deterministic ${STDLIB} ${RQ_UBSAN})
-    add_custom_command(
-        OUTPUT deterministic.run
-        COMMAND make_deterministic ${CMAKE_BINARY_DIR}/lib/libRaptorQ.${RQ_ABI}.a
-        DEPENDS RaptorQ_Static
-        COMMENT "Removing creation date from library..."
-        VERBATIM
-    )
+    # add_executable(make_deterministic src/deterministic.cpp)
+    # target_compile_options(
+    #     make_deterministic PRIVATE
+    #     ${CXX_COMPILER_FLAGS}
+    # )
+    # target_link_libraries(make_deterministic ${STDLIB} ${RQ_UBSAN})
+    # add_custom_command(
+    #     OUTPUT deterministic.run
+    #     COMMAND make_deterministic ${CMAKE_BINARY_DIR}/lib/libRaptorQ.${RQ_ABI}.a
+    #     DEPENDS RaptorQ_Static
+    #     COMMENT "Removing creation date from library..."
+    #     VERBATIM
+    # )
 
-    add_custom_target(
-        Make_static_deterministic ALL
-        DEPENDS deterministic.run
-    )
+    # add_custom_target(
+    #     Make_static_deterministic ALL
+    #     DEPENDS deterministic.run
+    # )
 endif()
 
 #build dynamic library
@@ -302,6 +304,9 @@ if(DYNAMIC_LIB MATCHES "ON")
     add_definitions(-DRAPTORQ_DLL_EXPORTS)
 
     add_library(RaptorQ SHARED ${SOURCES} ${HEADERS})
+    add_library(RaptorQ::RaptorQ ALIAS RaptorQ)
+    target_include_directories(RaptorQ PRIVATE "/home/eular/App/third_party/source/libraptorq/libRaptorQ_v0_1_9/external/eigen3/")
+
     target_compile_options(
         RaptorQ PRIVATE
         ${CXX_COMPILER_FLAGS}
@@ -326,41 +331,41 @@ endif()
 
 
 # add main tests
-add_executable(libRaptorQ-test EXCLUDE_FROM_ALL test/rfc_test.cpp)
-    target_compile_options(
-        libRaptorQ-test PRIVATE
-        ${CXX_COMPILER_FLAGS}
-    )
-add_dependencies(libRaptorQ-test RaptorQ)
-target_link_libraries(libRaptorQ-test ${RQ_UBSAN} ${STDLIB} RaptorQ ${CMAKE_THREAD_LIBS_INIT})
-add_custom_target(tests DEPENDS libRaptorQ-test)
+# add_executable(libRaptorQ-test EXCLUDE_FROM_ALL test/rfc_test.cpp)
+#     target_compile_options(
+#         libRaptorQ-test PRIVATE
+#         ${CXX_COMPILER_FLAGS}
+#     )
+# add_dependencies(libRaptorQ-test RaptorQ)
+# target_link_libraries(libRaptorQ-test ${RQ_UBSAN} ${STDLIB} RaptorQ ${CMAKE_THREAD_LIBS_INIT})
+# add_custom_target(tests DEPENDS libRaptorQ-test)
 
-# build examples
-# C interface
-add_executable(test_c EXCLUDE_FROM_ALL test/test_c.c)
-    target_compile_options(
-        test_c PRIVATE
-        ${C_COMPILER_FLAGS}
-    )
-add_dependencies(test_c RaptorQ)
-target_link_libraries(test_c ${RQ_UBSAN} ${STDLIB} RaptorQ m ${CMAKE_THREAD_LIBS_INIT})
+# # build examples
+# # C interface
+# add_executable(test_c EXCLUDE_FROM_ALL test/test_c.c)
+#     target_compile_options(
+#         test_c PRIVATE
+#         ${C_COMPILER_FLAGS}
+#     )
+# add_dependencies(test_c RaptorQ)
+# target_link_libraries(test_c ${RQ_UBSAN} ${STDLIB} RaptorQ m ${CMAKE_THREAD_LIBS_INIT})
 
-# CPP interface
-add_executable(test_cpp EXCLUDE_FROM_ALL test/test_cpp.cpp)
-    target_compile_options(
-        test_cpp PRIVATE
-        ${CXX_COMPILER_FLAGS}
-    )
-add_dependencies(test_cpp RaptorQ)
-target_link_libraries(test_cpp ${RQ_UBSAN} ${STDLIB} RaptorQ ${CMAKE_THREAD_LIBS_INIT})
-add_custom_target(examples DEPENDS test_c test_cpp)
+# # CPP interface
+# add_executable(test_cpp EXCLUDE_FROM_ALL test/test_cpp.cpp)
+#     target_compile_options(
+#         test_cpp PRIVATE
+#         ${CXX_COMPILER_FLAGS}
+#     )
+# add_dependencies(test_cpp RaptorQ)
+# target_link_libraries(test_cpp ${RQ_UBSAN} ${STDLIB} RaptorQ ${CMAKE_THREAD_LIBS_INIT})
+# add_custom_target(examples DEPENDS test_c test_cpp)
 
-add_custom_target(everything DEPENDS Make_static_deterministic tests examples docs)
+# add_custom_target(everything DEPENDS Make_static_deterministic tests examples docs)
 
 
-install(FILES ${HEADERS} DESTINATION include/RaptorQ/)
-install(TARGETS RaptorQ RaptorQ_Static
-     LIBRARY DESTINATION lib COMPONENT libraries
-     ARCHIVE DESTINATION lib COMPONENT libraries)
+# install(FILES ${HEADERS} DESTINATION include/RaptorQ/)
+# install(TARGETS RaptorQ_Static
+#      LIBRARY DESTINATION lib COMPONENT libraries
+#      ARCHIVE DESTINATION lib COMPONENT libraries)
 
 
