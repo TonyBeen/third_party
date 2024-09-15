@@ -14,9 +14,10 @@ configure_file(
     NEWLINE_STYLE UNIX
 )
 
-option(RAPTORQ_STATIC_LIB "Build static library" OFF)
 option(RAPTORQ_DYNAMIC_LIB "Build dynamic library" ON)
-option(ENABLE_DEBUG "Enable debug symbol" OFF)
+option(RAPTORQ_STATIC_LIB "Build static library" OFF)
+option(BUILD_EXAMPLES "Compile sample program" ON)
+option(ENABLE_DEBUG "Enable debug symbol" ON)
 
 # default
 if(NOT CMAKE_BUILD_TYPE)
@@ -56,22 +57,26 @@ add_subdirectory(libRaptorQ_v0_1_9)
 # build the static library
 if(RAPTORQ_STATIC_LIB MATCHES "ON")
     add_library(raptorq_static STATIC ${SOURCES} ${HEADERS})
+    add_library(raptorq::raptorq_static ALIAS raptorq_static)
+
     target_include_directories(raptorq_static PRIVATE ${RAPTORQ_INC_DIR})
     target_include_directories(raptorq_static PRIVATE ${LIBRAPTORQ_INC_DIR})
+
+    target_link_libraries(raptorq_static PRIVATE RaptorQ::RaptorQ_Static m pthread dl)
 
     target_compile_options(
         raptorq_static PRIVATE
         ${CXX_COMPILER_FLAGS}
     )
 
-    # set_target_properties (
-    #     raptorq_static
-    #     PROPERTIES
-    #     LINK_FLAGS "-Wl,-z,now,-z,relro -pie"
-    # )
+    set_target_properties (
+        raptorq_static
+        PROPERTIES
+        LINK_FLAGS "-Wl,-z,now,-z,relro -pie"
+    )
     set_property(TARGET raptorq_static PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
-    target_link_libraries(raptorq_static PRIVATE RaptorQ::RaptorQ_Static m pthread dl)
+    set(RAPTOR_LIBRARIE raptorq_static CACHE INTERNAL "link raptorq librarie")
 endif()
 
 #build dynamic library
@@ -80,8 +85,11 @@ if(RAPTORQ_DYNAMIC_LIB MATCHES "ON")
     add_definitions(-DRAPTORQ_DLL_EXPORTS)
 
     add_library(raptorq SHARED ${SOURCES} ${HEADERS})
+    add_library(raptorq::raptorq ALIAS raptorq)
+
     target_include_directories(raptorq PRIVATE ${RAPTORQ_INC_DIR})
     target_include_directories(raptorq PRIVATE ${LIBRAPTORQ_INC_DIR})
+
     target_link_libraries(raptorq PRIVATE RaptorQ::RaptorQ_Static m pthread dl)
 
     target_compile_options(
@@ -97,4 +105,10 @@ if(RAPTORQ_DYNAMIC_LIB MATCHES "ON")
     )
 
     set_property(TARGET raptorq PROPERTY LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+
+    set(RAPTOR_LIBRARIE raptorq CACHE INTERNAL "link raptorq librarie")
+endif()
+
+if(BUILD_EXAMPLES)
+    add_subdirectory(examples)
 endif()
