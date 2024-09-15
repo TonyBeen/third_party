@@ -18,7 +18,7 @@
 
 #include "raptorq/raptorq.h"
 
-#define REPAIR_PIECE    2
+#define REPAIR_PIECE    4
 
 typedef struct st_encoded_data
 {
@@ -31,6 +31,7 @@ void PrintHelpMsg(const char *exe)
 {
     printf("%s [option]\n", exe);
     printf("\t-f source file\n");
+    printf("\t-o output file\n");
     printf("\t-p piece per block\n");
     printf("\t-h help infomation\n");
 }
@@ -100,9 +101,10 @@ error_section:
 int main(int argc, char **argv)
 {
     const char *file_path = NULL;
+    const char *output_file_path = "output.dat";
     uint32_t piece_per_block = 16;
     char c = '\x0';
-    while ((c = getopt(argc, argv, "hf:p:")) > 0) {
+    while ((c = getopt(argc, argv, "hf:p:o:")) > 0) {
         switch (c) {
         case 'f':
             file_path = optarg;
@@ -112,6 +114,9 @@ int main(int argc, char **argv)
             if (piece_per_block <= 0) {
                 piece_per_block = 16;
             }
+            break;
+        case 'o':
+            output_file_path = optarg;
             break;
         case 'h':
             PrintHelpMsg(argv[0]);
@@ -125,6 +130,7 @@ int main(int argc, char **argv)
     struct stat file_stat;
     if (0 != stat(file_path, &file_stat)) {
         perror("stat error");
+        PrintHelpMsg(argv[0]);
         return 0;
     }
     uint32_t file_size = file_stat.st_size;
@@ -153,7 +159,9 @@ int main(int argc, char **argv)
             break;
         }
     }
-    printf("piece lost: %.2f\n", (lost_piece / (float)piece_per_block));
+    printf("piece lost: %u / %u = %.2f%%\n", lost_piece, (piece_per_block + REPAIR_PIECE),
+        (float)lost_piece / (piece_per_block + REPAIR_PIECE));
+
     raptorq_precompute(raptorq_handle, 1, false);
     void *file_data = malloc(piece_per_block * piece_size);
     assert(file_data != NULL);
@@ -163,11 +171,11 @@ int main(int argc, char **argv)
         goto free_flag;
     }
 
-    FILE *file_handle = fopen("other.dat", "w+");
+    FILE *file_handle = fopen(output_file_path, "w+");
     assert(file_handle);
     fwrite(file_data, file_size, 1, file_handle);
     fclose(file_handle);
-
+    printf("new file: %s\n", output_file_path);
     raptorq_clean(raptorq_handle);
 
 free_flag:
