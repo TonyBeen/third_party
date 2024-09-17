@@ -8,9 +8,20 @@
 #ifndef __RAPTOR_Q_DECODER_H__
 #define __RAPTOR_Q_DECODER_H__
 
+#include <vector>
+#include <memory>
+
 namespace raptorq {
+struct DecoderPrivate;
+class Decoder
+{
+public:
+    Decoder();
+    ~Decoder();
 
+private:
 
+};
 
 } // namespace raptorq
 

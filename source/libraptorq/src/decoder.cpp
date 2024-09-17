@@ -5,3 +5,8 @@
     > Created Time: 2024年09月13日 星期五 09时50分32秒
  ************************************************************************/
 
+#include "raptorq/decoder.h"
+
+#include <exception>
+
+#include "raptorq/raptorq.h"

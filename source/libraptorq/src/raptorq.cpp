@@ -138,6 +138,9 @@ bool raptorq_encode(raptorq_t raptor_handle, void *encode_data[], uint32_t piece
     for (uint32_t source = 0; source < (src_symbols + raptorq->repair_piece); ++source, ++i) {
         piece_id[i] = RaptorQ_id(source, block);
         void *date_temp = encode_data[i];
+        if (date_temp == NULL) {
+            return false;
+        }
 
         uint64_t written = RaptorQ_encode(raptorq->raptorq_ptr, &date_temp, symbol_size, source, block);
         if (written != symbol_size) {
