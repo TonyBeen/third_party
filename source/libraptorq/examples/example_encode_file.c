@@ -160,14 +160,14 @@ int main(int argc, char **argv)
         }
     }
     printf("piece lost: %u / %u = %.2f%%\n", lost_piece, (piece_per_block + REPAIR_PIECE),
-        (float)lost_piece / (piece_per_block + REPAIR_PIECE));
+        (float)lost_piece / (piece_per_block + REPAIR_PIECE) * 100.0);
 
     raptorq_precompute(raptorq_handle, 1, false);
     void *file_data = malloc(piece_per_block * piece_size);
     assert(file_data != NULL);
 
     if (!raptorq_decode(raptorq_handle, file_data, piece_per_block * piece_size)) {
-        printf("Failed to parse data\n");
+        printf("Excessive data loss, failed to parse data\n");
         goto free_flag;
     }
 

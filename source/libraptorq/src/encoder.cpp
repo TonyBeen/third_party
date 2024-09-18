@@ -26,6 +26,7 @@ struct EncoderPrivate {
         repair_piece = 0;
         if (raptor_handle != nullptr) {
             raptorq_clean(raptor_handle);
+            raptor_handle = nullptr;
         }
     }
 
@@ -63,11 +64,7 @@ bool Encoder::reset(uint32_t piece_per_block, uint16_t piece_size, uint8_t repai
     m_encoder->piece_size = piece_size;
     m_encoder->repair_piece = repair_piece;
     m_encoder->raptor_handle = raptorq_create_encode(piece_per_block, piece_size, repair_piece, block_data);
-    if (m_encoder->raptor_handle == nullptr) {
-        return false;
-    }
-
-    return true;
+    return m_encoder->raptor_handle != nullptr;
 }
 
 void Encoder::precompute(uint8_t threads)
