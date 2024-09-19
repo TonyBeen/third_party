@@ -35,20 +35,20 @@ public:
     /**
      * @brief 添加解码数据
      *
-     * @param data 数据缓存
      * @param id id
+     * @param data 数据缓存
      * @return true 成功返回true
      * @return false 当添加的解码数据都为源编码数据时再次尝试添加修复符号数据时会报错, 此时可尝试解码
      */
-    bool feedPiece(const void *data, uint32_t id);
+    bool feedPiece(uint32_t id, const void *data);
 
     /**
      * @brief 添加解码数据
      *
-     * @param data 数据缓存
      * @param id id
+     * @param data 数据缓存
      */
-    bool feedPiece(const std::string &data, uint32_t id);
+    bool feedPiece(uint32_t id, const std::string &data);
 
     /**
      * @brief 预处理数据

@@ -64,7 +64,7 @@ bool Decoder::reset(uint32_t piece_per_block, uint16_t piece_size)
     return m_decoder->raptor_handle != nullptr;
 }
 
-bool Decoder::feedPiece(const void *data, uint32_t id)
+bool Decoder::feedPiece(uint32_t id, const void *data)
 {
     if (data == nullptr || m_decoder->raptor_handle == nullptr) {
         return false;
@@ -73,9 +73,9 @@ bool Decoder::feedPiece(const void *data, uint32_t id)
     return raptorq_decode_feed_piece(m_decoder->raptor_handle, data, id);
 }
 
-bool Decoder::feedPiece(const std::string &data, uint32_t id)
+bool Decoder::feedPiece(uint32_t id, const std::string &data)
 {
-    return feedPiece(data.data(), id);
+    return feedPiece(id, data.data());
 }
 
 void Decoder::precompute(uint8_t threads)
