@@ -20,6 +20,7 @@ sudo rm -rf /usr/local/include/mysql
 sudo rm -rf /usr/local/include/openssl
 sudo rm -rf /usr/local/include/sqlite
 sudo rm -rf /usr/local/include/yaml-cpp
+sudo rm -rf /usr/local/include/libevent
 
 echo 'remove /usr/local/include over'
 #sudo rm -rf /usr/local/lib/*
@@ -39,6 +40,7 @@ response=$(sudo cp ./lib/mysql/*                /usr/local/lib/       -a -r)
 response=$(sudo cp ./lib/openssl/*              /usr/local/lib/       -a -r)
 response=$(sudo cp ./lib/sqlite/*               /usr/local/lib/       -a -r)
 response=$(sudo cp ./lib/yaml-cpp/*             /usr/local/lib/       -a -r)
+response=$(sudo cp ./lib/libevent/*             /usr/local/lib/       -a -r)
 
 # copy bin
 echo 'copy bin -> /usr/bin/'
