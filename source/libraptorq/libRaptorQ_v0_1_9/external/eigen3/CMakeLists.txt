@@ -319,16 +319,16 @@ macro(ei_add_target_property target prop value)
   set_target_properties(${target} PROPERTIES ${prop} "${previous} ${value}")
 endmacro(ei_add_target_property)
 
-install(FILES
-  signature_of_eigen3_matrix_library
-  DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT Devel
-  )
+# install(FILES
+#   signature_of_eigen3_matrix_library
+#   DESTINATION ${INCLUDE_INSTALL_DIR} COMPONENT Devel
+#   )
 
 if(EIGEN_BUILD_PKGCONFIG)
     configure_file(eigen3.pc.in eigen3.pc @ONLY)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/eigen3.pc
-        DESTINATION ${PKGCONFIG_INSTALL_DIR}
-        )
+    # install(FILES ${CMAKE_CURRENT_BINARY_DIR}/eigen3.pc
+    #     DESTINATION ${PKGCONFIG_INSTALL_DIR}
+    #     )
 endif(EIGEN_BUILD_PKGCONFIG)
 
 add_subdirectory(Eigen)

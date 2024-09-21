@@ -102,10 +102,10 @@ endif()
 
 add_dependencies(lapack eigen_lapack eigen_lapack_static)
 
-install(TARGETS eigen_lapack eigen_lapack_static
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib)
+# install(TARGETS eigen_lapack eigen_lapack_static
+#         RUNTIME DESTINATION bin
+#         LIBRARY DESTINATION lib
+#         ARCHIVE DESTINATION lib)
 
         
         

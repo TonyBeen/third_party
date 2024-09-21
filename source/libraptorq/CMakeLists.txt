@@ -15,9 +15,9 @@ configure_file(
 )
 
 option(RAPTORQ_DYNAMIC_LIB "Build dynamic library" ON)
-option(RAPTORQ_STATIC_LIB "Build static library" OFF)
+option(RAPTORQ_STATIC_LIB "Build static library" ON)
 option(BUILD_EXAMPLES "Compile sample program" ON)
-option(ENABLE_DEBUG "Enable debug symbol" ON)
+option(ENABLE_DEBUG "Enable debug symbol" OFF)
 
 # default
 if(NOT CMAKE_BUILD_TYPE)
