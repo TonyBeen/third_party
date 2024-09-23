@@ -13,71 +13,46 @@
 #include <list>
 #include <map>
 #include <unordered_map>
+#include <memory>
 
-#include <msgpack.h>
+#include <archive.hpp>
 
 namespace msgpack {
-class MsgPack final
+class MsgPackBinary : public OutputArchive<MsgPackBinary>
 {
+    MsgPackBinary(const MsgPackBinary&) = default;
+    MsgPackBinary&operator=(const MsgPackBinary&) = default;
+
 public:
-    MsgPack() {}
-    ~MsgPack() {}
+    MsgPackBinary() : OutputArchive(this) { }
+    ~MsgPackBinary() = default;
 
-    MsgPack &operator<<(const std::string &msg);
+    void *buffer() const
+    {
+        return _sbuf.data;
+    }
 
-    template<typename Key, typename Val>
-    MsgPack &operator<<(const std::pair<Key, Val> &msgPair);
-
-    template<typename Key, typename Val>
-    MsgPack &operator<<(const std::map<Key, Val> &msgMap);
-
-    template<typename Key, typename Val>
-    MsgPack &operator<<(const std::unordered_map<Key, Val> &msgHashMap);
-
-    template<typename Val>
-    MsgPack &operator<<(const std::vector<Val> &msgVec);
-
-    template<typename Val>
-    MsgPack &operator<<(const std::list<Val> &msgList);
-
-private:
-
+    size_t size() const
+    {
+        return _sbuf.size;
+    }
 };
 
-MsgPack &msgpack::MsgPack::operator<<(const std::string &msg)
+class MsgUnpackBinary : public InputArchive<MsgUnpackBinary>
 {
-    return *this;
-}
+    MsgUnpackBinary(const MsgUnpackBinary&) = default;
+    MsgUnpackBinary&operator=(const MsgUnpackBinary&) = default;
 
-template <typename Key, typename Val>
-inline MsgPack &MsgPack::operator<<(const std::pair<Key, Val> &msgPair)
-{
-    return *this;
-}
+public:
+    MsgUnpackBinary(const void *data, size_t size) :
+        InputArchive(this)
+    {
+        _buffer = data;
+        _size = size;
+    }
 
-template <typename Key, typename Val>
-inline MsgPack &MsgPack::operator<<(const std::map<Key, Val> &msgMap)
-{
-    return *this;
-}
-
-template <typename Key, typename Val>
-inline MsgPack &MsgPack::operator<<(const std::unordered_map<Key, Val> &msgHashMap)
-{
-    return *this;
-}
-
-template <typename Val>
-inline MsgPack &MsgPack::operator<<(const std::vector<Val> &msgVec)
-{
-    return *this;
-}
-
-template <typename Val>
-inline MsgPack &MsgPack::operator<<(const std::list<Val> &msgList)
-{
-    return *this;
-}
+    ~MsgUnpackBinary() = default;
+};
 
 } // namespace eular
 
