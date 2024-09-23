@@ -15,14 +15,16 @@
 #include <map>
 #include <unordered_map>
 
+#include <msgpack.h>
+
 namespace msgpack {
 class MsgPack
 {
 public:
     MsgPack();
-    ~MsgPack();
+    ~MsgPack() {}
 
-    // MsgPack &operator<<(const std::string &);
+    MsgPack &operator<<(const std::string &);
 
 private:
 

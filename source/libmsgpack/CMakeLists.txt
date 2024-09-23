@@ -7,7 +7,7 @@ set(CMAKE_C_STANDARD 11)
 
 option(MSGPACK_DYNAMIC_LIB "Build dynamic library" ON)
 option(MSGPACK_STATIC_LIB "Build static library" ON)
-option(BUILD_EXAMPLES "Compile sample program" ON)
+option(BUILD_EXAMPLES "Compile sample program" OFF)
 option(ENABLE_DEBUG "Enable debug symbol" OFF)
 
 # default
@@ -26,47 +26,47 @@ include(GNUInstallDirs)
 set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Installation directory for libraries")
 set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Installation directory for headers")
 
-SET(SOURCES	src/decoder.cpp
-        src/encoder.cpp
-        src/raptorq.cpp)
-
-SET(HEADERS	include/raptorq/decoder.h
-        include/raptorq/encoder.h
-        include/raptorq/raptorq.h)
+SET(SOURCES	src/msgpackpp.cpp)
+SET(HEADERS	include/msgpackpp.h)
 
 set(CXX_FLAGS "-W -Wall -Werror -Wextra")
-set(RAPTORQ_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(LIBRAPTORQ_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libRaptorQ_v0_1_9/src)
 
 # 添加依赖的库
-add_subdirectory(libRaptorQ_v0_1_9)
+add_subdirectory(msgpack_c)
 
 # build the static library
 if(MSGPACK_STATIC_LIB MATCHES "ON")
-    add_library(raptorq_static STATIC ${SOURCES} ${HEADERS})
-    add_library(raptorq::raptorq_static ALIAS raptorq_static)
+    add_library(msgpack_static STATIC ${SOURCES} ${HEADERS})
+    # add_library(msgpack::msgpack_static ALIAS msgpack_static)
 
-    target_include_directories(raptorq_static PRIVATE ${RAPTORQ_INC_DIR})
-    target_include_directories(raptorq_static PRIVATE ${LIBRAPTORQ_INC_DIR})
+    # target_include_directories(msgpack_static PRIVATE ${RAPTORQ_INC_DIR})
+    # target_include_directories(msgpack_static PRIVATE ${LIBRAPTORQ_INC_DIR})
 
-    target_link_libraries(raptorq_static PRIVATE RaptorQ::RaptorQ_Static m pthread dl)
+    target_include_directories(msgpack_static
+        PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:include>
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+    target_link_libraries(msgpack_static PUBLIC msgpack-c pthread)
 
     target_compile_options(
-        raptorq_static PRIVATE
+        msgpack_static PRIVATE
         ${CXX_COMPILER_FLAGS}
     )
 
     set_target_properties (
-        raptorq_static
+        msgpack_static
         PROPERTIES
         LINK_FLAGS "-Wl,-z,now,-z,relro -pie"
     )
-    set_property(TARGET raptorq_static PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+    set_property(TARGET msgpack_static PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
-    set(RAPTOR_LIBRARIE raptorq_static CACHE INTERNAL "link raptorq librarie")
+    set(RAPTOR_LIBRARIE msgpack_static CACHE INTERNAL "link msgpack librarie")
 
     if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL )
-        install(TARGETS raptorq_static
+        install(TARGETS msgpack_static
             RUNTIME DESTINATION "${INSTALL_BIN_DIR}"
             ARCHIVE DESTINATION "${INSTALL_LIB_DIR}"
             LIBRARY DESTINATION "${INSTALL_LIB_DIR}" )
@@ -75,34 +75,35 @@ endif()
 
 #build dynamic library
 if(MSGPACK_DYNAMIC_LIB MATCHES "ON")
-    add_definitions(-DRAPTORQ_DLL)
-    add_definitions(-DRAPTORQ_DLL_EXPORTS)
+    add_library(msgpack SHARED ${SOURCES} ${HEADERS})
+    # add_library(msgpack::msgpack ALIAS msgpack)
 
-    add_library(raptorq SHARED ${SOURCES} ${HEADERS})
-    add_library(raptorq::raptorq ALIAS raptorq)
+    target_include_directories(msgpack
+        PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:include>
+        PRIVATE
+            ${CMAKE_CURRENT_SOURCE_DIR}
+    )
 
-    target_include_directories(raptorq PRIVATE ${RAPTORQ_INC_DIR})
-    target_include_directories(raptorq PRIVATE ${LIBRAPTORQ_INC_DIR})
-
-    target_link_libraries(raptorq PRIVATE RaptorQ::RaptorQ_Static m pthread dl)
+    target_link_libraries(msgpack PUBLIC msgpack-c pthread)
 
     target_compile_options(
-        raptorq PRIVATE
+        msgpack PRIVATE
         ${CXX_COMPILER_FLAGS}
     )
 
     set_target_properties (
-        raptorq
+        msgpack
         PROPERTIES
         LINK_FLAGS "-Wl,-z,now,-z,relro"
-        VERSION ${RAPTORQ_VERSION}
     )
 
-    set_property(TARGET raptorq PROPERTY LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+    set_property(TARGET msgpack PROPERTY LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
-    set(RAPTOR_LIBRARIE raptorq CACHE INTERNAL "link raptorq librarie")
+    set(RAPTOR_LIBRARIE msgpack CACHE INTERNAL "link msgpack librarie")
     if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL )
-        install(TARGETS raptorq
+        install(TARGETS msgpack
             RUNTIME DESTINATION "${INSTALL_BIN_DIR}"
             ARCHIVE DESTINATION "${INSTALL_LIB_DIR}"
             LIBRARY DESTINATION "${INSTALL_LIB_DIR}" )
@@ -114,5 +115,5 @@ if(BUILD_EXAMPLES)
 endif()
 
 if(NOT SKIP_INSTALL_HEADERS AND NOT SKIP_INSTALL_ALL )
-    install(FILES ${HEADERS} DESTINATION "${INSTALL_INC_DIR}/raptorq")
+    install(FILES ${HEADERS} DESTINATION "${INSTALL_INC_DIR}")
 endif()
