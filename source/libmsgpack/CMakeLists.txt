@@ -26,8 +26,8 @@ include(GNUInstallDirs)
 set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Installation directory for libraries")
 set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Installation directory for headers")
 
-SET(SOURCES	src/msgpackpp.cpp)
-SET(HEADERS	include/msgpackpp.h)
+set(SOURCES	src/msgpackpp.cpp)
+set(HEADERS	include/msgpackpp.h)
 
 set(CXX_FLAGS "-W -Wall -Werror -Wextra")
 

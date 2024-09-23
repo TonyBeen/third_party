@@ -5,8 +5,4 @@
     > Created Time: 2024年09月22日 星期日 17时29分59秒
  ************************************************************************/
 
-#include "msgpackpp.h"
-
-msgpack::MsgPack::MsgPack()
-{
-}
+#include "msgpackpp.hpp"
