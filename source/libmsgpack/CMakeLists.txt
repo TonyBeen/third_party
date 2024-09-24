@@ -27,7 +27,10 @@ set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Installation direc
 set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Installation directory for headers")
 
 set(SOURCES	src/msgpackpp.cpp)
-set(HEADERS	include/msgpackpp.hpp)
+set(HEADERS
+    include/msgpackpp.hpp
+    include/archive.hpp
+    include/has_member.hpp)
 
 set(CXX_FLAGS "-W -Wall -Werror -Wextra")
 

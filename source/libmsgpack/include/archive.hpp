@@ -17,8 +17,7 @@
 #include <exception>
 
 #include <msgpack.h>
-
-#include <utils/has_member.hpp>
+#include <has_member.hpp>
 
 #define DATA_TYPE_MISMATCH() throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) + ", data type mismatch");
 
