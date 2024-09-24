@@ -50,7 +50,6 @@ public:
             return;
         }
 
-        reset();
         _self->process(std::forward<Types>(args)...);
     }
 
@@ -93,6 +92,12 @@ private:
         } else {
             msgpack_pack_false(&_pk);
         }
+    }
+
+    // char 和 signed char是两种类型
+    void processImpl(const char &msg)
+    {
+        msgpack_pack_int64(&_pk, msg);
     }
 
     void processImpl(const int8_t &msg)
@@ -249,15 +254,21 @@ public:
             return;
         }
 
-        reset();
+        if (_buffer == nullptr || _size == 0) {
+            return;
+        }
+
         _self->process(std::forward<Types>(args)...);
     }
 
-    void reset()
+    void reset(const void *data = nullptr, size_t size = 0)
     {
-        msgpack_unpacked_destroy(&_unpack);
-        msgpack_unpacked_init(&_unpack);
         _offset = 0;
+        _buffer = (const char *)data;
+        _size = size;
+
+        msgpack_unpacked_destroy(&_unpack);
+        msgpack_unpacked_init(&_unpack);        
     }
 
 private:
@@ -277,7 +288,7 @@ private:
 
 private:
     template<typename T>
-    void processImpl(T &obj)
+    void processImpl(T &obj, typename std::enable_if<!std::is_arithmetic<T>::value>::type* = nullptr)
     {
         static_assert(detail::has_member_load<T, void, ArchiveType &>::value,
             "The 'template<typename ArchiveType> void T::load(ArchiveType &)' function must be implemented");
@@ -285,7 +296,8 @@ private:
     }
 
     // 基础类型
-    void processImpl(bool &msg)
+    template<typename T>
+    void processImpl(T &msg, typename std::enable_if<std::is_arithmetic<T>::value>::type* = nullptr)
     {
         msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
         if (code != MSGPACK_UNPACK_SUCCESS) {
@@ -293,116 +305,6 @@ private:
         }
 
         internalProcess(_unpack.data, msg);
-    }
-
-    void processImpl(int8_t &msg)
-    {
-        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
-        if (code != MSGPACK_UNPACK_SUCCESS) {
-            throw std::runtime_error("parse failed");
-        }
-
-        internalProcess(_unpack.data, msg);
-    }
-
-    void processImpl(uint8_t &msg)
-    {
-        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
-        if (code != MSGPACK_UNPACK_SUCCESS) {
-            throw std::runtime_error("parse failed");
-        }
-
-        internalProcess(_unpack.data, msg);
-    }
-
-    void processImpl(int16_t &msg)
-    {
-        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
-        if (code != MSGPACK_UNPACK_SUCCESS) {
-            throw std::runtime_error("parse failed");
-        }
-
-        internalProcess(_unpack.data, msg);
-    }
-
-    void processImpl(uint16_t &msg)
-    {
-        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
-        if (code != MSGPACK_UNPACK_SUCCESS) {
-            throw std::runtime_error("parse failed");
-        }
-
-        internalProcess(_unpack.data, msg);
-    }
-
-    void processImpl(int32_t &msg)
-    {
-        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
-        if (code != MSGPACK_UNPACK_SUCCESS) {
-            throw std::runtime_error("parse failed");
-        }
-
-        internalProcess(_unpack.data, msg);
-    }
-
-    void processImpl(uint32_t &msg)
-    {
-        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
-        if (code != MSGPACK_UNPACK_SUCCESS) {
-            throw std::runtime_error("parse failed");
-        }
-
-        internalProcess(_unpack.data, msg);
-    }
-
-    void processImpl(int64_t &msg)
-    {
-        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
-        if (code != MSGPACK_UNPACK_SUCCESS) {
-            throw std::runtime_error("parse failed");
-        }
-
-        internalProcess(_unpack.data, msg);
-    }
-
-    void processImpl(uint64_t &msg)
-    {
-        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
-        if (code != MSGPACK_UNPACK_SUCCESS) {
-            throw std::runtime_error("parse failed");
-        }
-
-        internalProcess(_unpack.data, msg);
-    }
-
-    void processImpl(float &msg)
-    {
-        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
-        if (code != MSGPACK_UNPACK_SUCCESS) {
-            throw std::runtime_error("parse failed");
-        }
-
-        const msgpack_object &obj = _unpack.data;
-        if (obj.type == MSGPACK_OBJECT_FLOAT) {
-            msg = static_cast<float>(obj.via.f64);
-        } else {
-            DATA_TYPE_MISMATCH();
-        }
-    }
-
-    void processImpl(double &msg)
-    {
-        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
-        if (code != MSGPACK_UNPACK_SUCCESS) {
-            throw std::runtime_error("parse failed");
-        }
-
-        const msgpack_object &obj = _unpack.data;
-        if (obj.type == MSGPACK_OBJECT_FLOAT) {
-            msg = obj.via.f64;
-        } else {
-            DATA_TYPE_MISMATCH();
-        }
     }
 
     // 复杂类型
@@ -518,10 +420,6 @@ private:
             }
         } else {
             printf("type: %d\n", obj.type);
-            if (obj.type == MSGPACK_OBJECT_STR) {
-                // printf("\t%.*s\n", obj.via.str.size, obj.via.str.ptr);
-                printf("\t%s\n", obj.via.str.ptr);
-            }
             DATA_TYPE_MISMATCH();
         }
     }
@@ -549,7 +447,7 @@ private:
 
 private:
     template<typename T>
-    void internalProcess(const msgpack_object &obj, T &msg)
+    void internalProcess(const msgpack_object &obj, T &msg, typename std::enable_if<!std::is_arithmetic<T>::value>::type * = nullptr)
     {
         // TODO 如果是T复杂类型, 加载时需要从obj加载
         // 存储时是顺序存储, 会将一个结构体成员拆分成多个, 导致存储结构体map时会出现偏差
@@ -558,94 +456,28 @@ private:
         msg.load(*_self);
     }
 
-    void internalProcess(const msgpack_object &obj, bool &msg)
+    // 处理基础类型值
+    template<typename T>
+    void internalProcess(const msgpack_object &obj, T &msg, typename std::enable_if<std::is_arithmetic<T>::value>::type * = nullptr)
     {
-        if (obj.type != MSGPACK_OBJECT_BOOLEAN) {
+        switch (obj.type) {
+        case MSGPACK_OBJECT_BOOLEAN:
+            msg = obj.via.boolean;
+            break;
+        case MSGPACK_OBJECT_POSITIVE_INTEGER:
+            msg = static_cast<T>(obj.via.u64);
+            break;
+        case MSGPACK_OBJECT_NEGATIVE_INTEGER:
+            msg = static_cast<T>(obj.via.i64);
+            break;
+        case MSGPACK_OBJECT_FLOAT32:
+        case MSGPACK_OBJECT_FLOAT64:
+            msg = static_cast<T>(obj.via.f64);
+            break;
+        default:
+            printf("type = %d, T = %s\n", obj.type, __PRETTY_FUNCTION__);
             DATA_TYPE_MISMATCH();
-        }
-
-        msg = obj.via.boolean;
-    }
-
-    void internalProcess(const msgpack_object &obj, int8_t &n)
-    {
-        int64_t temp = 0;
-        internalProcess(obj, temp);
-        n = static_cast<int8_t>(temp);
-    }
-
-    void internalProcess(const msgpack_object &obj, int16_t &n)
-    {
-        int64_t temp = 0;
-        internalProcess(obj, temp);
-        n = static_cast<int16_t>(temp);
-    }
-
-    void internalProcess(const msgpack_object &obj, int32_t &n)
-    {
-        int64_t temp = 0;
-        internalProcess(obj, temp);
-        n = static_cast<int32_t>(temp);
-    }
-
-    void internalProcess(const msgpack_object &obj, int64_t &n)
-    {
-        if (obj.type == MSGPACK_OBJECT_POSITIVE_INTEGER) {
-            n = obj.via.u64;
-        } else if (obj.type == MSGPACK_OBJECT_NEGATIVE_INTEGER) {
-            n = obj.via.i64;
-        } else {
-            DATA_TYPE_MISMATCH();
-        }
-    }
-
-    void internalProcess(const msgpack_object &obj, uint8_t &n)
-    {
-        uint64_t temp = 0;
-        internalProcess(obj, temp);
-        n = static_cast<uint8_t>(temp);
-    }
-
-    void internalProcess(const msgpack_object &obj, uint16_t &n)
-    {
-        uint64_t temp = 0;
-        internalProcess(obj, temp);
-        n = static_cast<uint16_t>(temp);
-    }
-
-    void internalProcess(const msgpack_object &obj, uint32_t &n)
-    {
-        uint64_t temp = 0;
-        internalProcess(obj, temp);
-        n = static_cast<uint32_t>(temp);
-    }
-
-    void internalProcess(const msgpack_object &obj, uint64_t &n)
-    {
-        if (obj.type == MSGPACK_OBJECT_POSITIVE_INTEGER) {
-            n = obj.via.u64;
-        } else if (obj.type == MSGPACK_OBJECT_NEGATIVE_INTEGER) {
-            n = obj.via.i64;
-        } else {
-            DATA_TYPE_MISMATCH();
-        }
-    }
-
-    void internalProcess(const msgpack_object &obj, float &n)
-    {
-        if (obj.type == MSGPACK_OBJECT_FLOAT32 || obj.type == MSGPACK_OBJECT_FLOAT64) {
-            n = static_cast<float>(obj.via.f64);
-        } else {
-            DATA_TYPE_MISMATCH();
-        }
-    }
-
-    void internalProcess(const msgpack_object &obj, double &n)
-    {
-        if (obj.type == MSGPACK_OBJECT_FLOAT32 || obj.type == MSGPACK_OBJECT_FLOAT64) {
-            n = obj.via.f64;
-        } else {
-            DATA_TYPE_MISMATCH();
+            break;
         }
     }
 
