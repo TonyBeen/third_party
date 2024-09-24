@@ -7,8 +7,8 @@ set(CMAKE_C_STANDARD 11)
 
 option(MSGPACK_DYNAMIC_LIB "Build dynamic library" ON)
 option(MSGPACK_STATIC_LIB "Build static library" ON)
-option(BUILD_EXAMPLES "Compile sample program" OFF)
-option(ENABLE_DEBUG "Enable debug symbol" OFF)
+option(BUILD_EXAMPLES "Compile sample program" ON)
+option(ENABLE_DEBUG "Enable debug symbol" ON)
 
 # default
 if(NOT CMAKE_BUILD_TYPE)

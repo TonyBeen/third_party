@@ -46,6 +46,10 @@ public:
     template <typename ... Types> inline
     void operator()(Types && ... args)
     {
+        if (sizeof...(args) == 0) {
+            return;
+        }
+
         reset();
         _self->process(std::forward<Types>(args)...);
     }
@@ -76,7 +80,6 @@ private:
     template<typename T>
     void processImpl(const T &other)
     {
-        // TODO 处理自定义类型
         static_assert(detail::has_member_save<T, void, ArchiveType &>::value,
             "The 'template<typename ArchiveType> void T::save(ArchiveType &)' function must be implemented");
         other.save(*_self);
@@ -90,6 +93,36 @@ private:
         } else {
             msgpack_pack_false(&_pk);
         }
+    }
+
+    void processImpl(const int8_t &msg)
+    {
+        msgpack_pack_int64(&_pk, msg);
+    }
+
+    void processImpl(const uint8_t &msg)
+    {
+        msgpack_pack_uint64(&_pk, msg);
+    }
+
+    void processImpl(const int16_t &msg)
+    {
+        msgpack_pack_int64(&_pk, msg);
+    }
+
+    void processImpl(const uint16_t &msg)
+    {
+        msgpack_pack_uint64(&_pk, msg);
+    }
+
+    void processImpl(const int32_t &msg)
+    {
+        msgpack_pack_int64(&_pk, msg);
+    }
+
+    void processImpl(const uint32_t &msg)
+    {
+        msgpack_pack_uint64(&_pk, msg);
     }
 
     void processImpl(const int64_t &msg)
@@ -169,6 +202,7 @@ private:
     void processImpl(const std::map<Key, Val, Compare> &msg)
     {
         size_t size = msg.size();
+        msgpack_pack_map(&_pk, size);
         for (const auto &it : msg) {
             processImpl<Key, Val>(it, std::true_type());
         }
@@ -178,6 +212,7 @@ private:
     void processImpl(const std::unordered_map<Key, Val, Hash, Pred> &msg)
     {
         size_t size = msg.size();
+        msgpack_pack_map(&_pk, size);
         for (const auto &it : msg) {
             processImpl<Key, Val>(it, std::true_type());
         }
@@ -208,8 +243,13 @@ public:
     }
 
     template <typename ... Types> inline
-    bool operator()(Types && ... args)
+    void operator()(Types && ... args)
     {
+        if (sizeof...(args) == 0) {
+            return;
+        }
+
+        reset();
         _self->process(std::forward<Types>(args)...);
     }
 
@@ -255,6 +295,66 @@ private:
         internalProcess(_unpack.data, msg);
     }
 
+    void processImpl(int8_t &msg)
+    {
+        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
+        if (code != MSGPACK_UNPACK_SUCCESS) {
+            throw std::runtime_error("parse failed");
+        }
+
+        internalProcess(_unpack.data, msg);
+    }
+
+    void processImpl(uint8_t &msg)
+    {
+        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
+        if (code != MSGPACK_UNPACK_SUCCESS) {
+            throw std::runtime_error("parse failed");
+        }
+
+        internalProcess(_unpack.data, msg);
+    }
+
+    void processImpl(int16_t &msg)
+    {
+        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
+        if (code != MSGPACK_UNPACK_SUCCESS) {
+            throw std::runtime_error("parse failed");
+        }
+
+        internalProcess(_unpack.data, msg);
+    }
+
+    void processImpl(uint16_t &msg)
+    {
+        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
+        if (code != MSGPACK_UNPACK_SUCCESS) {
+            throw std::runtime_error("parse failed");
+        }
+
+        internalProcess(_unpack.data, msg);
+    }
+
+    void processImpl(int32_t &msg)
+    {
+        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
+        if (code != MSGPACK_UNPACK_SUCCESS) {
+            throw std::runtime_error("parse failed");
+        }
+
+        internalProcess(_unpack.data, msg);
+    }
+
+    void processImpl(uint32_t &msg)
+    {
+        msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
+        if (code != MSGPACK_UNPACK_SUCCESS) {
+            throw std::runtime_error("parse failed");
+        }
+
+        internalProcess(_unpack.data, msg);
+    }
+
     void processImpl(int64_t &msg)
     {
         msgpack_unpack_return code = msgpack_unpack_next(&_unpack, _buffer, _size, &_offset);
@@ -262,14 +362,7 @@ private:
             throw std::runtime_error("parse failed");
         }
 
-        const msgpack_object &obj = _unpack.data;
-        if (obj.type == MSGPACK_OBJECT_POSITIVE_INTEGER) {
-            msg = obj.via.u64;
-        } else if (obj.type == MSGPACK_OBJECT_NEGATIVE_INTEGER) {
-            msg = obj.via.i64;
-        } else {
-            DATA_TYPE_MISMATCH();
-        }
+        internalProcess(_unpack.data, msg);
     }
 
     void processImpl(uint64_t &msg)
@@ -279,14 +372,7 @@ private:
             throw std::runtime_error("parse failed");
         }
 
-        const msgpack_object &obj = _unpack.data;
-        if (obj.type == MSGPACK_OBJECT_POSITIVE_INTEGER) {
-            msg = obj.via.u64;
-        } else if (obj.type == MSGPACK_OBJECT_NEGATIVE_INTEGER) {
-            msg = obj.via.i64;
-        } else {
-            DATA_TYPE_MISMATCH();
-        }
+        internalProcess(_unpack.data, msg);
     }
 
     void processImpl(float &msg)
@@ -403,7 +489,6 @@ private:
 
         const msgpack_object &obj = _unpack.data;
         if (obj.type == MSGPACK_OBJECT_ARRAY) {
-            msg.resize(obj.via.array.size);
             const msgpack_object_array &objArray = obj.via.array;
             for (size_t i = 0; i < obj.via.array.size; ++i) {
                 Val temp;
@@ -428,10 +513,15 @@ private:
             const msgpack_object_map &objMap = obj.via.map;
             for (auto i = 0; i < obj.via.map.size; ++i) {
                 std::pair<Key, Val> temp;
-                internalProcess(objMap, 0, temp);
+                internalProcess(objMap, i, temp);
                 msg.insert(std::move(temp));
             }
         } else {
+            printf("type: %d\n", obj.type);
+            if (obj.type == MSGPACK_OBJECT_STR) {
+                // printf("\t%.*s\n", obj.via.str.size, obj.via.str.ptr);
+                printf("\t%s\n", obj.via.str.ptr);
+            }
             DATA_TYPE_MISMATCH();
         }
     }
@@ -449,7 +539,7 @@ private:
             const msgpack_object_map &objMap = obj.via.map;
             for (auto i = 0; i < obj.via.map.size; ++i) {
                 std::pair<Key, Val> temp;
-                internalProcess(objMap, 0, temp);
+                internalProcess(objMap, i, temp);
                 msg.insert(std::move(temp));
             }
         } else {
@@ -458,6 +548,16 @@ private:
     }
 
 private:
+    template<typename T>
+    void internalProcess(const msgpack_object &obj, T &msg)
+    {
+        // TODO 如果是T复杂类型, 加载时需要从obj加载
+        // 存储时是顺序存储, 会将一个结构体成员拆分成多个, 导致存储结构体map时会出现偏差
+        static_assert(detail::has_member_load<T, void, ArchiveType &>::value,
+            "The 'template<typename ArchiveType> void T::load(ArchiveType &)' function must be implemented");
+        msg.load(*_self);
+    }
+
     void internalProcess(const msgpack_object &obj, bool &msg)
     {
         if (obj.type != MSGPACK_OBJECT_BOOLEAN) {
@@ -553,7 +653,7 @@ private:
     void internalProcess(const msgpack_object &obj, std::basic_string<CharT> &msg)
     {
         if (obj.type == MSGPACK_OBJECT_STR) {
-            assert(obj.via.str.size / sizeof(CharT) == 0);
+            assert(obj.via.str.size % sizeof(CharT) == 0);
             msg.append(reinterpret_cast<const CharT *>(obj.via.str.ptr), obj.via.str.size / sizeof(CharT)); 
         } else {
             DATA_TYPE_MISMATCH();
@@ -572,7 +672,7 @@ private:
 
 protected:
     ArchiveType*        _self{nullptr};
-    const void *        _buffer{nullptr};
+    const char *        _buffer{nullptr};
     size_t              _size{0};
     size_t              _offset{0};
     msgpack_unpacked    _unpack;

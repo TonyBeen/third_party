@@ -47,7 +47,7 @@ public:
     MsgUnpackBinary(const void *data, size_t size) :
         InputArchive(this)
     {
-        _buffer = data;
+        _buffer = (const char *)data;
         _size = size;
     }
 

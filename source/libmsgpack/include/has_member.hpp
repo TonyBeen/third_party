@@ -18,7 +18,7 @@ struct has_member_##Func                                                        
 {                                                                                                           \
 private:                                                                                                    \
     template<typename U>                                                                                    \
-    static auto Check(int) -> decltype(std::declval<U>().Func(std::declval<Args>()...), std::true_type());  \
+    static auto Check(int) -> decltype(std::declval<const U>().Func(std::declval<Args>()...), std::true_type()); \
                                                                                                             \
     template<typename U>                                                                                    \
     static std::false_type Check(...);                                                                      \
