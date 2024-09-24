@@ -22,7 +22,7 @@
 #define DATA_TYPE_MISMATCH() throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) + ", data type mismatch");
 
 namespace msgpack {
-HAS_MEMBER(detail, save);
+HAS_MEMBER_CONST(detail, save);
 template<typename ArchiveType>
 class OutputArchive
 {
