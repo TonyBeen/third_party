@@ -8,7 +8,7 @@ set(CMAKE_C_STANDARD 11)
 option(MSGPACK_DYNAMIC_LIB "Build dynamic library" ON)
 option(MSGPACK_STATIC_LIB "Build static library" ON)
 option(BUILD_EXAMPLES "Compile sample program" ON)
-option(ENABLE_DEBUG "Enable debug symbol" ON)
+option(ENABLE_DEBUG "Enable debug symbol" OFF)
 
 # default
 if(NOT CMAKE_BUILD_TYPE)
@@ -30,7 +30,7 @@ set(SOURCES	src/msgpackpp.cpp)
 set(HEADERS
     include/msgpackpp.hpp
     include/archive.hpp
-    include/has_member.hpp)
+    include/traits.hpp)
 
 set(CXX_FLAGS "-W -Wall -Werror -Wextra")
 

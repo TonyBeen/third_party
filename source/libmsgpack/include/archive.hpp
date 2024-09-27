@@ -17,9 +17,10 @@
 #include <exception>
 
 #include <msgpack.h>
-#include <has_member.hpp>
+#include <traits.hpp>
 
-#define DATA_TYPE_MISMATCH() throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) + ", data type mismatch");
+#define DATA_TYPE_MISMATCH(Type) \
+    throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) + ", with [T = " + traits::ClassNameHelper<Type>::Name + "], data type mismatch");
 
 namespace msgpack {
 HAS_MEMBER_CONST(detail, save);
@@ -320,7 +321,7 @@ private:
             const msgpack_object_str &str = obj.via.str;
             msg.append(str.ptr, str.size);
         } else {
-            DATA_TYPE_MISMATCH();
+            DATA_TYPE_MISMATCH(traits::RemoveConstRef<decltype(msg)>);
         }
     }
 
@@ -337,7 +338,7 @@ private:
             const msgpack_object_map &objMap = obj.via.map;
             internalProcess(objMap, 0, msg);
         } else {
-            DATA_TYPE_MISMATCH();
+            DATA_TYPE_MISMATCH(traits::RemoveConstRef<decltype(msg)>);
         }
     }
 
@@ -356,7 +357,7 @@ private:
                 internalProcess(objArray.ptr[i], msg[i]);
             }
         } else {
-            DATA_TYPE_MISMATCH();
+            DATA_TYPE_MISMATCH(traits::RemoveConstRef<decltype(msg)>);
         }
     }
 
@@ -376,7 +377,7 @@ private:
                 internalProcess(objArray.ptr[i], msg[i]);
             }
         } else {
-            DATA_TYPE_MISMATCH();
+            DATA_TYPE_MISMATCH(traits::RemoveConstRef<decltype(msg)>);
         }
     }
 
@@ -397,7 +398,7 @@ private:
                 msg.push_back(std::move(temp));
             }
         } else {
-            DATA_TYPE_MISMATCH();
+            DATA_TYPE_MISMATCH(traits::RemoveConstRef<decltype(msg)>);
         }
     }
 
@@ -418,8 +419,7 @@ private:
                 msg.insert(std::move(temp));
             }
         } else {
-            printf("type: %d\n", obj.type);
-            DATA_TYPE_MISMATCH();
+            DATA_TYPE_MISMATCH(traits::RemoveConstRef<decltype(msg)>);
         }
     }
 
@@ -440,7 +440,7 @@ private:
                 msg.insert(std::move(temp));
             }
         } else {
-            DATA_TYPE_MISMATCH();
+            DATA_TYPE_MISMATCH(traits::RemoveConstRef<decltype(msg)>);
         }
     }
 
@@ -474,8 +474,7 @@ private:
             msg = static_cast<T>(obj.via.f64);
             break;
         default:
-            printf("type = %d, T = %s\n", obj.type, __PRETTY_FUNCTION__);
-            DATA_TYPE_MISMATCH();
+            DATA_TYPE_MISMATCH(traits::RemoveConstRef<decltype(msg)>);
             break;
         }
     }
@@ -487,7 +486,7 @@ private:
             assert(obj.via.str.size % sizeof(CharT) == 0);
             msg.append(reinterpret_cast<const CharT *>(obj.via.str.ptr), obj.via.str.size / sizeof(CharT)); 
         } else {
-            DATA_TYPE_MISMATCH();
+            DATA_TYPE_MISMATCH(traits::RemoveConstRef<decltype(msg)>);
         }
     }
 
