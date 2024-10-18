@@ -3,7 +3,6 @@ list(APPEND EXAMPLES
     complex_example
 )
 
-include_directories(${RAPTORQ_INC_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(example example.cc)

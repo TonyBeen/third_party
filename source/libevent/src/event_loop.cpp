@@ -54,9 +54,6 @@ int32_t EventLoop::dispatch(uint32_t flags)
         return -1;
     }
 
-    if (flags == 0) {
-        flags |= EVLOOP_NO_EXIT_ON_EMPTY;
-    }
     return event_base_loop(m_eventBase, static_cast<int32_t>(flags));
 }
 

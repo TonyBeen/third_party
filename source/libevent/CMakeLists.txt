@@ -15,6 +15,7 @@ endif()
 option(EVENT_DYNAMIC_LIB "Build dynamic library" ON)
 option(EVENT_STATIC_LIB "Build static library" ON)
 option(BUILD_EXAMPLES "Compile sample program" OFF)
+option(BUILD_TEST "Compile sample program" ON)
 option(ENABLE_DEBUG "Enable debug symbol" OFF)
 
 if(ENABLE_DEBUG MATCHES "ON")
@@ -113,6 +114,10 @@ endif()
 
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
+endif()
+
+if(BUILD_TEST)
+    add_subdirectory(test)
 endif()
 
 if(NOT SKIP_INSTALL_HEADERS AND NOT SKIP_INSTALL_ALL )
