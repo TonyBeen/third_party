@@ -21,38 +21,41 @@ sudo rm -rf /usr/local/include/openssl
 sudo rm -rf /usr/local/include/sqlite
 sudo rm -rf /usr/local/include/yaml-cpp
 sudo rm -rf /usr/local/include/libevent
+sudo rm -rf /usr/local/include/jemalloc
 
 echo 'remove /usr/local/include over'
 #sudo rm -rf /usr/local/lib/*
 
 # copy include
 echo 'copy include -> /usr/local/include/'
-response=$(sudo cp ./include/*                  /usr/local/include/   -a -r)
+response=$(sudo cp ./include/*                  /usr/local/include/ -a -r)
 echo 'copy over'
 
 # copy lib
-echo 'copy lib -> /usr/local/lib/'
-response=$(sudo cp ./lib/boost/*                /usr/local/lib/       -a -r)
-response=$(sudo cp ./lib/hiredis/*              /usr/local/lib/       -a -r)
-response=$(sudo cp ./lib/json/*                 /usr/local/lib/       -a -r)
-response=$(sudo cp ./lib/libunwind/*            /usr/local/lib/       -a -r)
-response=$(sudo cp ./lib/mysql/*                /usr/local/lib/       -a -r)
-response=$(sudo cp ./lib/openssl/*              /usr/local/lib/       -a -r)
-response=$(sudo cp ./lib/sqlite/*               /usr/local/lib/       -a -r)
-response=$(sudo cp ./lib/yaml-cpp/*             /usr/local/lib/       -a -r)
-response=$(sudo cp ./lib/libevent/*             /usr/local/lib/       -a -r)
+echo 'copy lib/* -> /usr/local/lib/'
+response=$(sudo cp ./lib/boost/*                /usr/local/lib/     -a -r)
+response=$(sudo cp ./lib/hiredis/*              /usr/local/lib/     -a -r)
+response=$(sudo cp ./lib/json/*                 /usr/local/lib/     -a -r)
+response=$(sudo cp ./lib/libunwind/*            /usr/local/lib/     -a -r)
+response=$(sudo cp ./lib/mysql/*                /usr/local/lib/     -a -r)
+response=$(sudo cp ./lib/openssl/*              /usr/local/lib/     -a -r)
+response=$(sudo cp ./lib/sqlite/*               /usr/local/lib/     -a -r)
+response=$(sudo cp ./lib/yaml-cpp/*             /usr/local/lib/     -a -r)
+response=$(sudo cp ./lib/libevent/*             /usr/local/lib/     -a -r)
+response=$(sudo cp ./lib/jemalloc/*             /usr/local/lib/     -a -r)
 
 # copy bin
-echo 'copy bin -> /usr/bin/'
-response=$(sudo cp ./bin/                       /usr/bin/             -a -r)
+echo 'copy bin/* -> /usr/local/bin/'
+response=$(sudo cp ./bin/*                      /usr/local/bin/     -a -r)
 
-echo 'copy share -> /usr/'
+echo 'copy share/* -> /usr/local/share/'
 #copy share
-response=$(sudo cp ./share/                     /usr/                 -a -r)
+response=$(sudo cp ./share/*                    /usr/local/share/   -a -r)
 
 echo 'copy over!'
 
 sudo ldconfig
 
+rm -f third_party.tar.gz
 echo 'tar -zcvf third_party.tar.gz bin/ include/ lib/ share/'
 response=$(tar -zcvf third_party.tar.gz bin/ include/ lib/ share/)
