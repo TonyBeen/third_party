@@ -15,13 +15,13 @@
 namespace ev {
 EventAsync::EventAsync(EventLoop::SP loop)
 {
-    m_asyncMap.reserve(128);
+    m_asyncMap.reserve(32);
     reset(loop.get());
 }
 
 EventAsync::EventAsync(const EventLoop *loop)
 {
-    m_asyncMap.reserve(128);
+    m_asyncMap.reserve(32);
     reset(loop);
 }
 
@@ -52,11 +52,12 @@ bool EventAsync::stop() noexcept
 
 bool EventAsync::addAsync(const std::string &name, AsyncCallback cb)
 {
-    if (cb == nullptr || m_started) {
+    if (cb == nullptr) {
         return false;
     }
 
-    auto ret = m_asyncMap.insert(std::make_pair(name, cb));
+    std::lock_guard<std::mutex> lock(m_mapMtx);
+    auto ret = m_asyncMap.emplace(std::make_pair(name, std::move(cb)));
     return ret.second;
 }
 
@@ -84,6 +85,7 @@ bool EventAsync::notify(const std::string &key) noexcept
 
     bool found = false;
     {
+        // NOTE 此处和读事件回调都为读, 无需加锁
         auto it = m_asyncMap.find(key);
         found = it != m_asyncMap.end();
     }
@@ -99,8 +101,8 @@ bool EventAsync::notify(const std::string &key) noexcept
             return true;
         } else if (sendSize == 0) { // 对端关闭
             return false;
-        } else {
-            return WouldBlock() ? 0 : -1;
+        } else { // 发送缓存满了
+            return WouldBlock() ? false : true;
         }
     }
 
@@ -115,22 +117,22 @@ void EventAsync::reset(const EventLoop *loop)
         m_event = nullptr;
     }
 
-    if (m_sockPair[0] > 0) {
-        evutil_closesocket(m_sockPair[0]);
-        evutil_closesocket(m_sockPair[1]);
-        m_sockPair[0] = -1;
-        m_sockPair[1] = -1;
+    if (m_sockPair[SOCK_PAIR_RECV] > 0) {
+        evutil_closesocket(m_sockPair[SOCK_PAIR_RECV]);
+        evutil_closesocket(m_sockPair[SOCK_PAIR_SEND]);
+        m_sockPair[SOCK_PAIR_RECV] = -1;
+        m_sockPair[SOCK_PAIR_SEND] = -1;
     }
 
     if (loop != nullptr && loop->loop() != nullptr) {
-        int32_t result = evutil_socketpair(AF_UNIX, SOCK_STREAM, 0, m_sockPair);
+        int32_t result = evutil_socketpair(AF_INET, SOCK_STREAM, 0, m_sockPair);
         assert(result == 0);
         if (result != 0) {
             return;
         }
 
-        assert(0 == evutil_make_socket_nonblocking(m_sockPair[0]));
-        assert(0 == evutil_make_socket_nonblocking(m_sockPair[1]));
+        assert(0 == evutil_make_socket_nonblocking(m_sockPair[SOCK_PAIR_RECV]));
+        assert(0 == evutil_make_socket_nonblocking(m_sockPair[SOCK_PAIR_SEND]));
 
         m_event = event_new(loop->loop(), m_sockPair[SOCK_PAIR_RECV], EV_READ | EV_PERSIST, [](evutil_socket_t, short, void *data) {
             auto self = static_cast<EventAsync *>(data);

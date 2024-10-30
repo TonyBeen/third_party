@@ -8,6 +8,16 @@
 #ifndef __EVENT_BASE_H__
 #define __EVENT_BASE_H__
 
+#ifdef _WIN32
+#include <winsock2.h>
+#define socket_t SOCKET
+#else
+#include <sys/socket.h>
+#define socket_t int32_t
+#undef INVALID_SOCKET
+#define INVALID_SOCKET -1
+#endif
+
 #ifndef DISALLOW_COPY_AND_ASSIGN
 #define DISALLOW_COPY_AND_ASSIGN(ClassName)             \
     ClassName(const ClassName&) = delete;               \
@@ -21,5 +31,9 @@
     ClassName& operator=(ClassName &&) = delete;
 
 #endif
+
+// libevent struct
+struct event;
+struct event_base;
 
 #endif // __EVENT_BASE_H__

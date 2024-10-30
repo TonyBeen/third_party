@@ -29,6 +29,7 @@ set(SOURCES
     src/event_async.cpp
     src/event_base.cpp
     src/event_loop.cpp
+    src/event_poll.cpp
     src/event_signal.cpp
     src/event_timer.cpp)
 
@@ -36,6 +37,7 @@ set(HEADERS
     include/event_async.h
     include/event_base.h
     include/event_loop.h
+    include/event_poll.h
     include/event_signal.h
     include/event_timer.h)
 

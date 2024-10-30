@@ -11,9 +11,6 @@
 #include <memory>
 #include <event_base.h>
 
-
-struct event_base;
-
 namespace ev {
 class EventLoop
 {

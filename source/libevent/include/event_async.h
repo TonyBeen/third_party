@@ -16,8 +16,6 @@
 #include <event_base.h>
 #include <event_loop.h>
 
-struct event;
-
 namespace ev {
 class EventAsync
 {

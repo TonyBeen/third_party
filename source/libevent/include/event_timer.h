@@ -13,15 +13,13 @@
 #include <event_base.h>
 #include <event_loop.h>
 
-struct event;
-
 namespace ev {
 class EventTimer
 {
     DISALLOW_COPY_AND_ASSIGN(EventTimer);
     DISALLOW_MOVE(EventTimer);
 public:
-    using TimerCallback = std::function<void()>;
+    using TimerCB = std::function<void()>;
 
     using SP = std::shared_ptr<EventTimer>;
     using WP = std::weak_ptr<EventTimer>;
@@ -30,7 +28,7 @@ public:
     EventTimer() noexcept = default;
     ~EventTimer();
 
-    bool set(EventLoop *loop, TimerCallback cb) noexcept;
+    bool reset(EventLoop *loop, TimerCB cb) noexcept;
 
     bool start(uint64_t timeout, uint64_t repeat = 0) noexcept;
 
@@ -40,9 +38,9 @@ protected:
     bool addTimerEvent(uint64_t timeout);
 
 private:
-    TimerCallback   m_cb;
-    event*          m_event = nullptr;
-    uint64_t        m_repeat = 0;
+    TimerCB     m_cb;
+    event*      m_event = nullptr;
+    uint64_t    m_repeat = 0;
 };
 
 } // namespace ev
