@@ -3148,9 +3148,11 @@ timeout_next(struct event_base *base, struct timeval **tv_p)
 
 	ev = min_heap_top_(&base->timeheap);
 
+	// NOTE 如果没有定时器, 等待500ms, 不阻塞
 	if (ev == NULL) {
 		/* if no time-based events are active wait for I/O */
-		*tv_p = NULL;
+		tv->tv_sec = 0;
+		tv->tv_usec = 500 * 1000;
 		goto out;
 	}
 

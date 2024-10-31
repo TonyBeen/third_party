@@ -16,7 +16,7 @@ option(EVENT_DYNAMIC_LIB "Build dynamic library" ON)
 option(EVENT_STATIC_LIB "Build static library" ON)
 option(BUILD_EXAMPLES "Compile sample program" OFF)
 option(BUILD_TEST "Compile sample program" ON)
-option(ENABLE_DEBUG "Enable debug symbol" OFF)
+option(ENABLE_DEBUG "Enable debug symbol" ON)
 
 if(ENABLE_DEBUG MATCHES "ON")
     set(CMAKE_BUILD_TYPE "Debug")

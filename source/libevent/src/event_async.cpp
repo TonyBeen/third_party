@@ -57,7 +57,7 @@ bool EventAsync::addAsync(const std::string &name, AsyncCallback cb)
     }
 
     std::lock_guard<std::mutex> lock(m_mapMtx);
-    auto ret = m_asyncMap.emplace(std::make_pair(name, std::move(cb)));
+    auto ret = m_asyncMap.emplace(name, std::move(cb));
     return ret.second;
 }
 
@@ -85,7 +85,7 @@ bool EventAsync::notify(const std::string &key) noexcept
 
     bool found = false;
     {
-        // NOTE 此处和读事件回调都为读, 无需加锁
+        std::lock_guard<std::mutex> lock(m_mapMtx);
         auto it = m_asyncMap.find(key);
         found = it != m_asyncMap.end();
     }
@@ -96,7 +96,7 @@ bool EventAsync::notify(const std::string &key) noexcept
 #else
         static const int kSendFlag = 0;
 #endif
-        auto sendSize = ::send(m_sockPair[SOCK_PAIR_SEND], key.c_str(), key.size(), kSendFlag);
+        auto sendSize = ::send(m_sockPair[SOCK_PAIR_SEND], key.c_str(), key.size() + 1, kSendFlag);
         if (sendSize > 0) {
             return true;
         } else if (sendSize == 0) { // 对端关闭
@@ -125,7 +125,8 @@ void EventAsync::reset(const EventLoop *loop)
     }
 
     if (loop != nullptr && loop->loop() != nullptr) {
-        int32_t result = evutil_socketpair(AF_INET, SOCK_STREAM, 0, m_sockPair);
+        // NOTE socketpair不支持AF_INET
+        int32_t result = evutil_socketpair(AF_UNIX, SOCK_STREAM, 0, m_sockPair);
         assert(result == 0);
         if (result != 0) {
             return;
@@ -154,6 +155,7 @@ void EventAsync::reset(const EventLoop *loop)
 
             size_t pos = std::string::npos;
             size_t off = 0;
+
             while ((pos = eventDomain.find('\0', off)) != std::string::npos) {
                 std::string cbName(eventDomain.c_str() + off, pos - off);
 

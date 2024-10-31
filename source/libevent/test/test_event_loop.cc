@@ -30,15 +30,9 @@ int main(int argc, char **argv)
         eventLoop->dispatch();
     });
 
-    for (int32_t i = 0; i < 5; ++i) {
-        eventAsync->notify("Hello");
-    }
+    eventAsync->notify("Hello");
+    eventAsync->notify("World");
 
-    for (int32_t i = 0; i < 5; ++i) {
-        eventAsync->notify("World");
-    }
-
-    
     th.join();
     return 0;
 }
