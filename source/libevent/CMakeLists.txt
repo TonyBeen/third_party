@@ -41,8 +41,10 @@ set(HEADERS
     include/event_signal.h
     include/event_timer.h)
 
-# 添加依赖的库
+# libevent
 add_subdirectory(libevent_V2_1_10)
+# 异步DNS解析库
+add_subdirectory(libares_V1_34_1)
 
 # build the static library
 if(EVENT_STATIC_LIB MATCHES "ON")
@@ -56,7 +58,7 @@ if(EVENT_STATIC_LIB MATCHES "ON")
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}
     )
-    target_link_libraries(event_wrapper_static PUBLIC event pthread)
+    target_link_libraries(event_wrapper_static PUBLIC c-ares::cares_static event pthread)
 
     target_compile_options(
         event_wrapper_static PRIVATE
@@ -91,7 +93,7 @@ if(EVENT_DYNAMIC_LIB MATCHES "ON")
             ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
-    target_link_libraries(event_wrapper PUBLIC event pthread)
+    target_link_libraries(event_wrapper PUBLIC c-ares::cares_static event pthread)
 
     target_compile_options(
         event_wrapper PRIVATE
