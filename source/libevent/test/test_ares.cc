@@ -16,7 +16,7 @@
 #include <arpa/inet.h>
 
 #include <event2/event.h>
-#include "include/ares.h"
+#include <ares.h>
 
 void socket_state_callback(void *data, ares_socket_t sock, int readable, int writable)
 {
