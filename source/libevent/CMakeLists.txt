@@ -26,6 +26,7 @@ set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Installation direc
 set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Installation directory for headers")
 
 set(SOURCES
+    src/dns_resolve.cpp
     src/event_async.cpp
     src/event_base.cpp
     src/event_loop.cpp
@@ -34,6 +35,7 @@ set(SOURCES
     src/event_timer.cpp)
 
 set(HEADERS
+    include/dns_resolve.h
     include/event_async.h
     include/event_base.h
     include/event_loop.h

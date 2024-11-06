@@ -197,7 +197,7 @@ if ("${EVENT__LIBRARY_TYPE}" STREQUAL "DEFAULT")
     if (${MSVC})
         set(EVENT_LIBRARY_TYPE SHARED)
     else()
-        set(EVENT_LIBRARY_TYPE BOTH)
+        set(EVENT_LIBRARY_TYPE STATIC)
     endif()
 else()
     string(TOUPPER "${EVENT__LIBRARY_TYPE}" EVENT_LIBRARY_TYPE)
@@ -278,6 +278,8 @@ if (${GNUC})
          -Wlogical-op
 
          -Wwrite-strings
+
+         -fPIC
     )
 
     if (${CLANG})

@@ -67,12 +67,21 @@ void dns_callback(void *arg, int status, int timeouts, struct ares_addrinfo *res
                 struct sockaddr_in6* sa = (struct sockaddr_in6*)iter->ai_addr;
                 ares_inet_ntop(AF_INET6, &(sa->sin6_addr), addr, INET6_ADDRSTRLEN);
             }
-            printf("\tResolved IP address: %s\n", addr);
+            printf("\tResolved IP address: %s, ttl = %d\n", addr, iter->ai_ttl);
             iter = iter->ai_next;
         }
+
+        // 多层嵌套CNAME时需要多个ares_addrinfo_cname节点
+        // 如: my.4399.com -> my.4399api.net -> my.4399.com.lxdns.com -> 118.123.235.2
+        struct ares_addrinfo_cname *cname_iter = res->cnames;
+        while (cname_iter) {
+            printf("\tttl: %d, alias = %s, name = %s\n", cname_iter->ttl, cname_iter->alias, cname_iter->name);
+            cname_iter = cname_iter->next;
+        }
+
         ares_freeaddrinfo(res);
     } else {
-        printf("\tDNS resolution failed: %d, %s\n", status, ares_strerror(status));
+        printf("DNS resolution failed: %d, %s, %p\n", status, ares_strerror(status), res);
     }
 }
 
@@ -84,8 +93,8 @@ void ares_event_callback(int fd, short events, void *arg) {
 int main() {
     ares_channel channel = nullptr;
     ares_options options;
-    options.timeout = 1000;
-    options.flags = 0;
+    options.timeout = 60000;
+    options.flags = ARES_FLAG_NORECURSE;
     options.sock_state_cb = socket_state_callback;
     // ARES_OPT_SOCK_STATE_CB
 
@@ -106,55 +115,52 @@ int main() {
     printf("=====================>\n");
 
     // 设置 DNS 服务器
-    ares_set_servers_csv(channel, "114.114.114.114,8.8.8.8");  // 多个地址中间用 , 隔开
-
-    printf("=====================>\n");
+    // ares_set_servers_csv(channel, "114.114.114.114");  // 多个地址中间用 , 隔开
 
     // 进行 DNS 查询
     struct ares_addrinfo_hints hint;
     memset(&hint, 0x00, sizeof(hint));
     hint.ai_family = AF_UNSPEC;
-    ares_getaddrinfo(channel, "bing.com", NULL, &hint, dns_callback, NULL);
+    // ares_getaddrinfo(channel, "my.4399.com", NULL, &hint, dns_callback, NULL);
+    // ares_getaddrinfo(channel, "my.4399.com.lxdns.com", NULL, &hint, dns_callback, NULL);
 
     printf("=====================>\n");
 
-    ares_getaddrinfo(channel, "google.com", NULL, &hint, dns_callback, NULL);
-    ares_getaddrinfo(channel, "www.eular.top", NULL, &hint, dns_callback, NULL);
-    ares_getaddrinfo(channel, "www.heular.cn", NULL, &hint, dns_callback, NULL);
+    // ares_getaddrinfo(channel, "imga4.4399.com", NULL, &hint, dns_callback, NULL);
+    ares_getaddrinfo(channel, "www.xxeular.top", NULL, &hint, dns_callback, NULL);
+    // ares_getaddrinfo(channel, "www.heular.cn", NULL, &hint, dns_callback, NULL);
     // ares_gethostbyname(channel, "www.baidu.com", AF_INET, dns_callback, NULL); // deprecated
-
-    printf("=====================>\n");
 
     struct event_base *base = event_base_new();
     struct event* ev_array[ARES_GETSOCK_MAXNUM] = {nullptr};
 
-    // ares_socket_t socks[ARES_GETSOCK_MAXNUM] = {0};
-    // int bitmask = ares_getsock(channel, socks, ARES_GETSOCK_MAXNUM); // deprecated
-    // printf("mask = %X\n", bitmask);
+    ares_socket_t socks[ARES_GETSOCK_MAXNUM] = {0};
+    int bitmask = ares_getsock(channel, socks, ARES_GETSOCK_MAXNUM); // deprecated
+    printf("mask = %X\n", bitmask);
 
-    // int socknum = 0;
-    // for (int i = 0; i < ARES_GETSOCK_MAXNUM; i++) 
-    // {
-    //     int16_t flag = EV_PERSIST;
-    //     if (ARES_GETSOCK_READABLE(bitmask, i)) {
-    //         flag |= EV_READ;
-    //     }
+    int socknum = 0;
+    for (int i = 0; i < ARES_GETSOCK_MAXNUM; i++) 
+    {
+        int16_t flag = EV_PERSIST;
+        if (ARES_GETSOCK_READABLE(bitmask, i)) {
+            flag |= EV_READ;
+        }
 
-    //     if (ARES_GETSOCK_WRITABLE(bitmask, i)) {
-    //         flag |= EV_WRITE;
-    //     }
+        if (ARES_GETSOCK_WRITABLE(bitmask, i)) {
+            flag |= EV_WRITE;
+        }
 
-    //     printf("sock = %d, flag = %X\n", socks[i], flag);
+        printf("sock = %d, flag = %X\n", socks[i], flag);
 
-    //     if (flag != EV_PERSIST) {
-    //         // 创建 libevent 的事件
-    //         ev_array[i] = event_new(base, socks[i], flag, ares_event_callback, channel);
-    //         event_add(ev_array[i], NULL);
-    //         socknum++;
-    //     } else {
-    //         break;
-    //     }
-    // }
+        if (flag != EV_PERSIST) {
+            // 创建 libevent 的事件
+            ev_array[i] = event_new(base, socks[i], flag, ares_event_callback, channel);
+            event_add(ev_array[i], NULL);
+            socknum++;
+        } else {
+            break;
+        }
+    }
 
     // 运行 libevent 事件循环
     event_base_dispatch(base);

@@ -19,6 +19,7 @@ EventPoll::EventPoll()
 
 EventPoll::~EventPoll()
 {
+    clean();
 }
 
 int32_t EventPoll::reset(EventLoop *loop, socket_t sock, Event flag, EventCB cb)
