@@ -69,6 +69,14 @@ macro(add_event_library LIB_NAME)
             "${LIB_NAME}_static" PROPERTIES
             PUBLIC_HEADER "${HDR_PUBLIC}")
 
+        target_include_directories(${LIB_NAME}_static
+            PUBLIC "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>"
+                "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
+                "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+                "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
+        )
+
         list(APPEND LIBEVENT_STATIC_LIBRARIES "${LIB_NAME}_static")
         list(APPEND ADD_EVENT_LIBRARY_TARGETS "${LIB_NAME}_static")
 
@@ -96,6 +104,14 @@ macro(add_event_library LIB_NAME)
         set_target_properties(
             "${LIB_NAME}_shared" PROPERTIES
             SOVERSION ${EVENT_ABI_LIBVERSION}
+        )
+
+        target_include_directories(${LIB_NAME}_static
+            PUBLIC "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}>"
+                "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>"
+                "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+                "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
+                "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
         )
 
         list(APPEND LIBEVENT_SHARED_LIBRARIES "${LIB_NAME}_shared")
