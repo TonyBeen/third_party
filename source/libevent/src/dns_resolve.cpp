@@ -10,7 +10,9 @@
 #include <string.h>
 #include <assert.h>
 #include <mutex>
+#include <thread>
 #include <chrono>
+#include <unordered_map>
 
 #include <ares.h>
 
@@ -53,6 +55,7 @@ public:
     }
 
     ares_channel    channel = nullptr;
+    std::unordered_map<socket_t, EventPoll> socketPollMap;
     EventPoll       readEvent;
     EventPoll       writeEvent;
     DNSManager*     manager = nullptr;
@@ -126,29 +129,53 @@ void DNSResolver::OnSocketStateChanged(void *data, socket_t sock, int readable, 
     assert(data != nullptr);
     DNSResolver *self = static_cast<DNSResolver *>(data);
 
-    if (readable && !self->m_internal->readEvent.hasPending()) {
-        self->m_internal->readEvent.reset(self->m_internal->manager->m_internal->eventLoop,
-            sock, EventPoll::Event::Read, [self] (socket_t sockFd, EventPoll::event_t events) {
-                socket_t readSock = (events & EventPoll::Event::Read) ? sockFd : ARES_SOCKET_BAD;
-                socket_t writeSock = (events & EventPoll::Event::Write) ? sockFd : ARES_SOCKET_BAD;
-                ares_process_fd(self->m_internal->channel, readSock, writeSock);
-            });
-        self->m_internal->readEvent.start();
-    } else {
-        self->m_internal->readEvent.stop();
+    EventLoop *eventLoop = self->m_internal->manager->m_internal->eventLoop;
+    EventPoll &eventPoll = self->m_internal->socketPollMap[sock];
+    if (eventPoll.hasPending()) {
+        eventPoll.stop();
     }
 
-    if (writable && !self->m_internal->writeEvent.hasPending()) {
-        self->m_internal->writeEvent.reset(self->m_internal->manager->m_internal->eventLoop,
-            sock, EventPoll::Event::Write, [self] (socket_t sockFd, EventPoll::event_t events) {
+    EventPoll::event_t eventFlag = EventPoll::Event::None;
+    if (readable) {
+        eventFlag |= EventPoll::Event::Read;
+    }
+
+    if (writable) {
+        eventFlag |= EventPoll::Event::Write;
+    }
+
+    if (eventFlag != EventPoll::Event::None) {
+        eventPoll.reset(eventLoop, sock, (EventPoll::Event)eventFlag, [self] (socket_t sockFd, EventPoll::event_t events) {
                 socket_t readSock = (events & EventPoll::Event::Read) ? sockFd : ARES_SOCKET_BAD;
                 socket_t writeSock = (events & EventPoll::Event::Write) ? sockFd : ARES_SOCKET_BAD;
                 ares_process_fd(self->m_internal->channel, readSock, writeSock);
             });
-        self->m_internal->writeEvent.start();
-    } else {
-        self->m_internal->writeEvent.stop();
+        eventPoll.start();
     }
+
+    // if (readable && !self->m_internal->readEvent.hasPending()) {
+    //     self->m_internal->readEvent.reset(self->m_internal->manager->m_internal->eventLoop,
+    //         sock, EventPoll::Event::Read, [self] (socket_t sockFd, EventPoll::event_t events) {
+    //             socket_t readSock = (events & EventPoll::Event::Read) ? sockFd : ARES_SOCKET_BAD;
+    //             socket_t writeSock = (events & EventPoll::Event::Write) ? sockFd : ARES_SOCKET_BAD;
+    //             ares_process_fd(self->m_internal->channel, readSock, writeSock);
+    //         });
+    //     self->m_internal->readEvent.start();
+    // } else {
+    //     self->m_internal->readEvent.stop();
+    // }
+
+    // if (writable && !self->m_internal->writeEvent.hasPending()) {
+    //     self->m_internal->writeEvent.reset(self->m_internal->manager->m_internal->eventLoop,
+    //         sock, EventPoll::Event::Write, [self] (socket_t sockFd, EventPoll::event_t events) {
+    //             socket_t readSock = (events & EventPoll::Event::Read) ? sockFd : ARES_SOCKET_BAD;
+    //             socket_t writeSock = (events & EventPoll::Event::Write) ? sockFd : ARES_SOCKET_BAD;
+    //             ares_process_fd(self->m_internal->channel, readSock, writeSock);
+    //         });
+    //     self->m_internal->writeEvent.start();
+    // } else {
+    //     self->m_internal->writeEvent.stop();
+    // }
 }
 
 void DNSResolver::OnDnsCallback(void *arg, int status, int timeouts, ares_addrinfo *res)
@@ -223,9 +250,9 @@ bool DNSResolver::resolve(const std::string &domain, DNSResolveCB cb, HostType t
     }
 
     // 从缓存查询
-    const auto &dnsResultVec = m_internal->manager->getDomainCache(domain);
-    if (!dnsResultVec.empty()) {
-        cb(DNS_SUCCESS, dnsResultVec);
+    const DNSResultVec *dnsResultVec = m_internal->manager->getDomainCache(domain);
+    if (dnsResultVec && !dnsResultVec->empty()) {
+        cb(DNS_SUCCESS, *dnsResultVec);
         return true;
     }
 
@@ -330,9 +357,14 @@ bool DNSManager::hasDoaminCache(const std::string &domain)
     return it != m_internal->domainResolvedMap.end();
 }
 
-const DNSResultVec &DNSManager::getDomainCache(const std::string &domain)
+const DNSResultVec *DNSManager::getDomainCache(const std::string &domain)
 {
-    
+    auto it = m_internal->domainResolvedMap.find(domain);
+    if (it == m_internal->domainResolvedMap.end()) {
+        return nullptr;
+    }
+
+    return &it->second;
 }
 
 void DNSManager::addDNSCacheInternal(const std::string &domian, DNSResultVec hostVec)

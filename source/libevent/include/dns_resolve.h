@@ -85,18 +85,20 @@ public:
     // 设置获取时间回调, 返回值ms
     void setAcquireTimeCB(AcquireTimeCB cb);
 
-    // 添加指定域名的缓存, 无超时时间限制
+    // 添加指定域名的缓存, 超时时间受ttl控制
     void addDNSCache(const std::string &domian, const DNSResultVec &hostVec);
 
     // 移除指定域名的缓存
     void removeDNSCache(const std::string &domain);
 
+    // 判断是否存在此域名
     bool hasDoaminCache(const std::string &domain);
 
-    const DNSResultVec &getDomainCache(const std::string &domain);
+    // 获取域名缓存
+    const DNSResultVec *getDomainCache(const std::string &domain);
 
 protected:
-    // DNSResolver 添加的域名, 受超时时间限制
+    // DNSResolver 添加的域名
     void addDNSCacheInternal(const std::string &domian, DNSResultVec hostVec);
 
 private:

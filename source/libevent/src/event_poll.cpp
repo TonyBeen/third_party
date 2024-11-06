@@ -22,7 +22,7 @@ EventPoll::~EventPoll()
     clean();
 }
 
-int32_t EventPoll::reset(EventLoop *loop, socket_t sock, Event flag, EventCB cb)
+int32_t EventPoll::reset(EventLoop *loop, socket_t sock, event_t flag, EventCB cb)
 {
     if (loop == nullptr && cb == nullptr) {
         clean();
@@ -52,7 +52,7 @@ int32_t EventPoll::reset(EventLoop *loop, socket_t sock, Event flag, EventCB cb)
         if (flag & EV_WRITE) {
             evFlag |= Event::Write;
         }
-        self->m_cb(sock, flag);
+        self->m_cb(sock, evFlag);
     }, this);
 
     return m_ev != nullptr ? 0 : -2;
@@ -84,7 +84,7 @@ bool EventPoll::hasPending() const
     return flags != 0;
 }
 
-uint32_t EventPoll::EventParse(Event eventFlag)
+uint32_t EventPoll::EventParse(event_t eventFlag)
 {
     uint32_t persistEventMask = static_cast<uint32_t>(Event::Read | Event::Write);
     uint32_t onceEventMask = static_cast<uint32_t>(Event::ReadOnce | Event::WriteOnce);

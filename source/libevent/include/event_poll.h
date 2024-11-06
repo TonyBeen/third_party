@@ -51,14 +51,14 @@ public:
      * @return int32_t 成功返回0, 失败返回负值
      */
     int32_t reset(EventLoop *loop = nullptr, socket_t sock = INVALID_SOCKET,
-                  Event flag = Event::None, EventCB cb = nullptr);
+                  event_t flag = Event::None, EventCB cb = nullptr);
 
     bool start();
     void stop();
     bool hasPending() const;
 
 private:
-    static uint32_t EventParse(Event eventFlag);
+    static uint32_t EventParse(event_t eventFlag);
     void clean();
 
 private:

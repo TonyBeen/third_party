@@ -2,6 +2,7 @@ list(APPEND EXAMPLES
     test_event_loop
     test_event_async
     test_ares
+    test_dns_resolve
 )
 
 add_executable(test_event_loop test_event_loop.cc)
@@ -23,6 +24,13 @@ if(EVENT_STATIC_LIB MATCHES "ON")
 target_link_libraries(test_ares event_wrapper_static)
 elseif(EVENT_DYNAMIC_LIB MATCHES "ON")
 target_link_libraries(test_ares event_wrapper)
+endif()
+
+add_executable(test_dns_resolve test_dns_resolve.cc)
+if(EVENT_STATIC_LIB MATCHES "ON")
+target_link_libraries(test_dns_resolve event_wrapper_static)
+elseif(EVENT_DYNAMIC_LIB MATCHES "ON")
+target_link_libraries(test_dns_resolve event_wrapper)
 endif()
 
 add_custom_target(examples DEPENDS ${EXAMPLES})
