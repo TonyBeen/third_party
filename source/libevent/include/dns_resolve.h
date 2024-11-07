@@ -17,7 +17,8 @@
 #include <event_poll.h>
 
 #define DNS_SUCCESS 0
-#define DNS_FAILED  -1
+#define DNS_TIMEOUT -1
+#define DNS_FAILED  -2
 
 struct ares_addrinfo;
 
@@ -55,12 +56,14 @@ public:
     void setResolveTimeout(uint32_t ms);
 
     // 设置域名服务器 多个域名以 ',' 分割. 如: "114.114.114.114,8.8.8.8"
-    void setDomainServer(const std::string &host);
+    bool setDomainServer(const std::string &host);
 
     // 解析域名
     bool resolve(const std::string &domain, DNSResolveCB cb, HostType type = HostType::Both);
 
 private:
+    bool initChannel();
+    void onResolveTimeout(const std::string &domain);
     static void OnSocketStateChanged(void *data, socket_t sock, int readable, int writable);
     static void OnDnsCallback(void *arg, int status, int timeouts, ares_addrinfo *res);
 

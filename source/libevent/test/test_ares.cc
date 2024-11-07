@@ -93,7 +93,7 @@ void ares_event_callback(int fd, short events, void *arg) {
 int main() {
     ares_channel channel = nullptr;
     ares_options options;
-    options.timeout = 60000;
+    options.timeout = 1000;
     options.flags = ARES_FLAG_NORECURSE;
     options.sock_state_cb = socket_state_callback;
     // ARES_OPT_SOCK_STATE_CB
@@ -112,23 +112,16 @@ int main() {
         return 0;
     }
 
-    printf("=====================>\n");
-
     // 设置 DNS 服务器
-    // ares_set_servers_csv(channel, "114.114.114.114");  // 多个地址中间用 , 隔开
+    ares_set_servers_csv(channel, "114.114.114.114");  // 多个地址中间用 , 隔开
 
     // 进行 DNS 查询
     struct ares_addrinfo_hints hint;
     memset(&hint, 0x00, sizeof(hint));
     hint.ai_family = AF_UNSPEC;
-    // ares_getaddrinfo(channel, "my.4399.com", NULL, &hint, dns_callback, NULL);
+    ares_getaddrinfo(channel, "my.4399.com", NULL, &hint, dns_callback, NULL);
     // ares_getaddrinfo(channel, "my.4399.com.lxdns.com", NULL, &hint, dns_callback, NULL);
-
-    printf("=====================>\n");
-
     // ares_getaddrinfo(channel, "imga4.4399.com", NULL, &hint, dns_callback, NULL);
-    ares_getaddrinfo(channel, "www.xxeular.top", NULL, &hint, dns_callback, NULL);
-    // ares_getaddrinfo(channel, "www.heular.cn", NULL, &hint, dns_callback, NULL);
     // ares_gethostbyname(channel, "www.baidu.com", AF_INET, dns_callback, NULL); // deprecated
 
     struct event_base *base = event_base_new();

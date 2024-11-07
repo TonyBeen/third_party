@@ -12,10 +12,20 @@
 namespace ev {
 EventTimer::~EventTimer()
 {
+    reset();
 }
 
 bool EventTimer::reset(EventLoop *loop, TimerCB cb) noexcept
 {
+    if (loop == nullptr && cb == nullptr) {
+        stop();
+        if (m_event) {
+            event_free(m_event);
+            m_event = nullptr;
+        }
+        return true;
+    }
+
     if (loop == nullptr || loop->loop() == nullptr) {
         return false;
     }

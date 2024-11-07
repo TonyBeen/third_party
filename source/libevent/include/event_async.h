@@ -35,7 +35,7 @@ public:
 
     bool start() noexcept;
 
-    bool stop() noexcept;
+    void stop() noexcept;
 
     /**
      * @brief 调用 start() 后再调用此函数会失败, 需要先 stop() 后调用

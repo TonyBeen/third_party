@@ -40,14 +40,13 @@ bool EventAsync::start() noexcept
     return m_started;
 }
 
-bool EventAsync::stop() noexcept
+void EventAsync::stop() noexcept
 {
     if (m_event == nullptr) {
-        return false;
+        return;
     }
 
-    m_started = !(0 == event_del(m_event));
-    return !m_started;
+    event_del(m_event);
 }
 
 bool EventAsync::addAsync(const std::string &name, AsyncCallback cb)

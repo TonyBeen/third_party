@@ -21,13 +21,21 @@
 static std::once_flag g_initAres;
 
 namespace ev {
+// 必须在堆上
 struct AresArg {
-    ~AresArg() {
+    DNSResolver*    self = nullptr;
+    std::string     domain;
+
+    void destroy() {
         delete this;
     }
 
-    DNSResolver*    self = nullptr;
-    std::string     domain;
+private:
+    ~AresArg() { }
+};
+
+struct ResoleEventArg {
+    EventPoll   eventPoll;
 };
 
 class DNSResolverInternal
@@ -55,9 +63,7 @@ public:
     }
 
     ares_channel    channel = nullptr;
-    std::unordered_map<socket_t, EventPoll> socketPollMap;
-    EventPoll       readEvent;
-    EventPoll       writeEvent;
+    std::unordered_map<socket_t, ResoleEventArg> socketPollMap;
     DNSManager*     manager = nullptr;
     uint32_t        timeout = 1000;
     std::string     domainServer;
@@ -65,6 +71,7 @@ public:
     struct PendingDoamin {
         DNSResolver::DNSResolveCB   resolveCB;
         DNSResolver::HostType       type;
+        EventTimer::SP              timer;
     };
     std::map<std::string, PendingDoamin>  domainMap; // 待解析的域名map
 };
@@ -119,9 +126,52 @@ void DNSResolver::setResolveTimeout(uint32_t ms)
     m_internal->timeout = ms;
 }
 
-void DNSResolver::setDomainServer(const std::string &host)
+bool DNSResolver::setDomainServer(const std::string &host)
 {
+    if (host.empty() || m_internal->channel == nullptr) {
+        return false;
+    }
+
+    if (!initChannel()) {
+        return false;
+    }
+
     m_internal->domainServer = host;
+    if (ARES_SUCCESS != ares_set_servers_csv(m_internal->channel, m_internal->domainServer.c_str())) {
+        return false;
+    }
+
+    return true;
+}
+
+bool DNSResolver::initChannel()
+{
+    // 初始化 ares channel
+    if (nullptr == m_internal->channel) {
+        ares_options options;
+        memset(&options, 0, sizeof(options));
+        options.flags = 0;
+        options.sock_state_cb = OnSocketStateChanged;
+        options.sock_state_cb_data = this;
+
+        int32_t status = ares_init_options(&m_internal->channel, &options, ARES_OPT_SOCK_STATE_CB);
+        if (status != ARES_SUCCESS) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void DNSResolver::onResolveTimeout(const std::string &domain)
+{
+    auto it = m_internal->domainMap.find(domain);
+    if (it == m_internal->domainMap.end()) {
+        return;
+    }
+
+    it->second.resolveCB(DNS_TIMEOUT, DNSResultVec{});
+    m_internal->domainMap.erase(it);
 }
 
 void DNSResolver::OnSocketStateChanged(void *data, socket_t sock, int readable, int writable)
@@ -130,7 +180,7 @@ void DNSResolver::OnSocketStateChanged(void *data, socket_t sock, int readable, 
     DNSResolver *self = static_cast<DNSResolver *>(data);
 
     EventLoop *eventLoop = self->m_internal->manager->m_internal->eventLoop;
-    EventPoll &eventPoll = self->m_internal->socketPollMap[sock];
+    EventPoll &eventPoll = self->m_internal->socketPollMap[sock].eventPoll;
     if (eventPoll.hasPending()) {
         eventPoll.stop();
     }
@@ -182,6 +232,9 @@ void DNSResolver::OnDnsCallback(void *arg, int status, int timeouts, ares_addrin
 {
     assert(arg != nullptr);
     AresArg *aresArg = static_cast<AresArg *>(arg);
+    std::shared_ptr<void> _clean(nullptr, [aresArg] (void *) {
+        aresArg->destroy();
+    });
     DNSResolver *self = aresArg->self;
     const std::string &domain = aresArg->domain;
     auto it = self->m_internal->domainMap.find(domain);
@@ -249,6 +302,11 @@ bool DNSResolver::resolve(const std::string &domain, DNSResolveCB cb, HostType t
         return false;
     }
 
+    // 处于解析中
+    if (m_internal->domainMap.find(domain) != m_internal->domainMap.end()) {
+        return true;
+    }
+
     // 从缓存查询
     const DNSResultVec *dnsResultVec = m_internal->manager->getDomainCache(domain);
     if (dnsResultVec && !dnsResultVec->empty()) {
@@ -256,26 +314,8 @@ bool DNSResolver::resolve(const std::string &domain, DNSResolveCB cb, HostType t
         return true;
     }
 
-    // 初始化 ares channel
-    if (nullptr == m_internal->channel) {
-        ares_options options;
-        memset(&options, 0, sizeof(options));
-        options.flags = 0;
-        options.timeout = m_internal->timeout;
-        options.sock_state_cb = OnSocketStateChanged;
-        options.sock_state_cb_data = this;
-
-        int32_t status = ares_init_options(&m_internal->channel, &options, ARES_OPT_TIMEOUT | ARES_OPT_SOCK_STATE_CB);
-        if (status != ARES_SUCCESS) {
-            // printf("Failed to create DNS channel: %s\n", ares_strerror(status));
-            return false;
-        }
-
-        if (!m_internal->domainServer.empty()) {
-            if (ARES_SUCCESS != ares_set_servers_csv(m_internal->channel, m_internal->domainServer.c_str())) {
-                return false;
-            }
-        }
+    if (!initChannel()) {
+        return false;
     }
 
     ares_addrinfo_hints hint;
@@ -294,12 +334,23 @@ bool DNSResolver::resolve(const std::string &domain, DNSResolveCB cb, HostType t
         return false;
     }
 
-    m_internal->domainMap.emplace(domain, DNSResolverInternal::PendingDoamin{cb, type});
+    // m_internal->domainMap.emplace(domain, DNSResolverInternal::PendingDoamin{cb, type});
+    auto &pendingDomain = m_internal->domainMap[domain];
+    pendingDomain.resolveCB = std::move(cb);
+    pendingDomain.type = type;
+    auto timer = std::make_shared<EventTimer>();
+    pendingDomain.timer = timer;
+
     AresArg *arg = new AresArg();
     arg->self = this;
     arg->domain = domain;
     ares_getaddrinfo(m_internal->channel, domain.c_str(), NULL, &hint, OnDnsCallback, arg);
-    return true;
+
+    // 添加超时定时器
+    timer->reset(m_internal->manager->m_internal->eventLoop, [domain, this] () {
+        this->onResolveTimeout(domain);
+    });
+    return timer->start(m_internal->timeout);
 }
 
 DNSManager::DNSManager(EventLoop *loop)
