@@ -121,28 +121,30 @@ bool raptorq_encode(raptorq_t raptor_handle, void *encode_data[], uint32_t piece
         return false;
     }
 
-    uint8_t block = blocks - 1;
+    uint8_t sbn = blocks - 1;
     // symbol 个数
-    uint32_t src_symbols = RaptorQ_symbols(raptorq->raptorq_ptr, block);
+    uint32_t src_symbols = RaptorQ_symbols(raptorq->raptorq_ptr, sbn);
     assert(src_symbols == raptorq->piece_per_block);
     if (src_symbols != raptorq->piece_per_block) {
         return false;
     }
 
-    uint32_t max_repair_symbol = RaptorQ_max_repair(raptorq->raptorq_ptr, block);
+    uint32_t max_repair_symbol = RaptorQ_max_repair(raptorq->raptorq_ptr, sbn);
     if (max_repair_symbol < raptorq->repair_piece) {
         return false;
     }
 
     uint32_t i = 0;
     for (uint32_t source = 0; source < (src_symbols + raptorq->repair_piece); ++source, ++i) {
-        piece_id[i] = RaptorQ_id(source, block);
+        // TODO 由于sbn为0, RaptorQ_id返回值只与esi相关, 改为esi传参进来
+        uint32_t esi = source;
+        piece_id[i] = RaptorQ_id(esi, sbn);
         void *date_temp = encode_data[i];
         if (date_temp == NULL) {
             return false;
         }
 
-        uint64_t written = RaptorQ_encode(raptorq->raptorq_ptr, &date_temp, symbol_size, source, block);
+        uint64_t written = RaptorQ_encode(raptorq->raptorq_ptr, &date_temp, symbol_size, esi, sbn);
         if (written != symbol_size) {
             return false;
         }
