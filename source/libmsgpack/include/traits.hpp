@@ -8,6 +8,7 @@
 #ifndef __EULAR_UTILS_HAS_MEMBER_H__
 #define __EULAR_UTILS_HAS_MEMBER_H__
 
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <typeinfo>
