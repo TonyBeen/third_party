@@ -176,7 +176,6 @@ int main(int argc, char **argv)
     fwrite(file_data, file_size, 1, file_handle);
     fclose(file_handle);
     printf("new file: %s\n", output_file_path);
-    raptorq_clean(raptorq_handle);
 
 free_flag:
     for (uint32_t i = 0; i < (piece_per_block + REPAIR_PIECE); ++i) {
@@ -185,5 +184,6 @@ free_flag:
     free(encoded_data);
     free(id_vec);
     free(file_data);
+    raptorq_clean(raptorq_handle);
     return 0;
 }

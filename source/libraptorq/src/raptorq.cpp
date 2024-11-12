@@ -136,7 +136,6 @@ bool raptorq_encode(raptorq_t raptor_handle, void *encode_data[], uint32_t piece
 
     uint32_t i = 0;
     for (uint32_t source = 0; source < (src_symbols + raptorq->repair_piece); ++source, ++i) {
-        // TODO 由于sbn为0, RaptorQ_id返回值只与esi相关, 改为esi传参进来
         uint32_t esi = source;
         piece_id[i] = RaptorQ_id(esi, sbn);
         void *date_temp = encode_data[i];
