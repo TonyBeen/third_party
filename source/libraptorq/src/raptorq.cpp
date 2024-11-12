@@ -11,6 +11,7 @@
 #include <assert.h>
 
 #include "cRaptorQ.h"
+#include "version.h"
 
 #define RAPTOR_ENCODE   1
 #define RAPTOR_DECODE   2
@@ -23,6 +24,11 @@ typedef struct _Raptorq
     uint8_t         repair_piece;
     RaptorQ_ptr*    raptorq_ptr;
 } SRaptorq;
+
+const char *raptorq_version()
+{
+    return RAPTORQ_VERSION;
+}
 
 raptorq_t raptorq_create_encode(uint32_t piece_per_block, uint16_t piece_size, uint8_t repair_piece, const void *block_data)
 {

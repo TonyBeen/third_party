@@ -52,7 +52,7 @@ SET(HEADERS	include/raptorq/decoder.h
         include/raptorq/raptorq.h)
 
 set(CXX_FLAGS "-W -Wall -Werror -Wextra")
-set(RAPTORQ_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set(RAPTORQ_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(LIBRAPTORQ_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libRaptorQ_v0_1_9/src)
 
 # 添加依赖的库

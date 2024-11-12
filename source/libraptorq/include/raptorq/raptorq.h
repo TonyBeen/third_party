@@ -23,6 +23,8 @@ extern "C" {
      */
     typedef void *raptorq_t;
 
+    const char *raptorq_version();
+
     /**
      * @brief 创建一个编码器
      *
