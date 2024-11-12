@@ -18,6 +18,8 @@
 
 #include "raptorq/raptorq.h"
 
+// TODO 修复符号应根据丢包率计算: R为修复piece个数 R=N×p+冗余保护
+// p为丢包率, N为piece per block, 冗余保护应对波动
 #define REPAIR_PIECE    4
 
 typedef struct st_encoded_data
@@ -46,7 +48,7 @@ uint16_t EncodeFile(const char *file_path, uint32_t piece_per_block, void *encod
 
     uint32_t file_size = file_stat.st_size;
     uint32_t block_size = file_size;
-    if (file_size == 0 || file_size > 1 * 1024 * 1024) { // 超过1M认为大文件
+    if (file_size == 0 || file_size > 2 * 1024 * 1024) { // 超过2M认为大文件
         printf("The file is empty or too large (less than 1Mb)\n");
         return 0;
     }
@@ -95,6 +97,7 @@ uint16_t EncodeFile(const char *file_path, uint32_t piece_per_block, void *encod
 error_section:
     free(file_data);
     fclose(file_handle);
+    raptorq_clean(raptor_handle);
     return 0;
 }
 
@@ -144,11 +147,11 @@ int main(int argc, char **argv)
     }
 
     srand(time(NULL));
-    float loss_rate = 10.0; // 默认丢失率为10%
+    float loss_rate = 10.0f; // 默认丢失率为10%
     uint16_t lost_piece = 0;
     raptorq_t raptorq_handle = raptorq_create_decode(piece_per_block, piece_size);
     for (size_t i = 0; i < (piece_per_block + REPAIR_PIECE); ++i) {
-        float dropped = ((float)(rand()) / (float) RAND_MAX) * (float)100.0;
+        float dropped = ((float)rand() / RAND_MAX) * (float)100.0;
         if (dropped < loss_rate) {
             ++lost_piece;
             continue;
