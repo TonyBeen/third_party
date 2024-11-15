@@ -58,6 +58,9 @@ include_HEADERS += include/unwind.h
 endif
 endif
 
+# TODO 修改头文件安装位置
+includedir = $(prefix)/include/libunwind
+
 nodist_include_HEADERS = include/libunwind-common.h
 
 SUBDIRS = src
