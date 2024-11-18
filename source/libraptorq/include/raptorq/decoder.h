@@ -55,7 +55,7 @@ public:
      *
      * @param threads 线程个数
      */
-    void precompute(uint8_t threads);
+    void precompute(uint8_t threads = 1);
 
     /**
      * @brief 获取解码后的数据
