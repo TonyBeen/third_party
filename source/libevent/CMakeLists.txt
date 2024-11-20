@@ -47,6 +47,8 @@ set(HEADERS
 add_subdirectory(libevent_V2_1_10)
 # 异步DNS解析库
 add_subdirectory(libares_V1_34_1)
+# nghttp2
+add_subdirectory(nghttp2_V1_61_0)
 
 # build the static library
 if(EVENT_STATIC_LIB MATCHES "ON")
