@@ -35,13 +35,13 @@ set(SOURCES
     src/event_timer.cpp)
 
 set(HEADERS
-    include/dns_resolve.h
-    include/event_async.h
-    include/event_base.h
-    include/event_loop.h
-    include/event_poll.h
-    include/event_signal.h
-    include/event_timer.h)
+    include/event/dns_resolve.h
+    include/event/event_async.h
+    include/event/event_base.h
+    include/event/event_loop.h
+    include/event/event_poll.h
+    include/event/event_signal.h
+    include/event/event_timer.h)
 
 # libevent
 add_subdirectory(libevent_V2_1_10)

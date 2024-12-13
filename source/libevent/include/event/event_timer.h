@@ -10,8 +10,8 @@
 
 #include <functional>
 
-#include <event_base.h>
-#include <event_loop.h>
+#include <event/event_base.h>
+#include <event/event_loop.h>
 
 namespace ev {
 class EventTimer

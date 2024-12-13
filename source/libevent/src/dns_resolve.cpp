@@ -5,7 +5,7 @@
     > Created Time: 2024年11月01日 星期五 18时02分14秒
  ************************************************************************/
 
-#include "dns_resolve.h"
+#include "event/dns_resolve.h"
 
 #include <string.h>
 #include <assert.h>
@@ -16,7 +16,7 @@
 
 #include <ares.h>
 
-#include "event_timer.h"
+#include "event/event_timer.h"
 
 static std::once_flag g_initAres;
 
