@@ -124,9 +124,9 @@ if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
-# if(BUILD_TEST)
-#     add_subdirectory(test)
-# endif()
+if(BUILD_TEST)
+    add_subdirectory(test)
+endif()
 
 if(NOT SKIP_INSTALL_HEADERS AND NOT SKIP_INSTALL_ALL )
     install(FILES ${HEADERS} DESTINATION "${INSTALL_INC_DIR}/event")
