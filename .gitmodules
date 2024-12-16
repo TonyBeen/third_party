@@ -1,0 +1,9 @@
+[submodule "source/zip/lz4"]
+	path = source/zip/lz4
+	url = git@github.com:lz4/lz4.git
+[submodule "source/zip/zstd"]
+	path = source/zip/zstd
+	url = git@github.com:facebook/zstd.git
+[submodule "source/zip/zlib"]
+	path = source/zip/zlib
+	url = git@github.com:madler/zlib.git
