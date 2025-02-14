@@ -62,18 +62,25 @@ if(EVENT_STATIC_LIB MATCHES "ON")
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}
     )
-    target_link_libraries(event_wrapper_static PUBLIC c-ares::cares_static event pthread)
+
+    target_link_libraries(event_wrapper_static PUBLIC c-ares::cares_static event)
+    if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        target_link_libraries(event_wrapper_static PUBLIC pthread)
+    endif()
 
     target_compile_options(
         event_wrapper_static PRIVATE
         ${CXX_COMPILER_FLAGS}
     )
 
-    set_target_properties (
-        event_wrapper_static
-        PROPERTIES
-        LINK_FLAGS "-Wl,-z,now,-z,relro -pie"
-    )
+    if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        set_target_properties (
+            event_wrapper_static
+            PROPERTIES
+            LINK_FLAGS "-Wl,-z,now,-z,relro -pie"
+        )
+    endif()
+
     set_property(TARGET event_wrapper_static PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
     if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL )
@@ -97,18 +104,23 @@ if(EVENT_DYNAMIC_LIB MATCHES "ON")
             ${CMAKE_CURRENT_SOURCE_DIR}
     )
 
-    target_link_libraries(event_wrapper PUBLIC c-ares::cares_static event pthread)
+    target_link_libraries(event_wrapper PUBLIC c-ares::cares_static event)
+    if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        target_link_libraries(event_wrapper_static PUBLIC pthread)
+    endif()
 
     target_compile_options(
         event_wrapper PRIVATE
         ${CXX_COMPILER_FLAGS}
     )
 
-    set_target_properties (
-        event_wrapper
-        PROPERTIES
-        LINK_FLAGS "-Wl,-z,now,-z,relro"
-    )
+    if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        set_target_properties (
+            event_wrapper
+            PROPERTIES
+            LINK_FLAGS "-Wl,-z,now,-z,relro -pie"
+        )
+    endif ()
 
     set_property(TARGET event_wrapper PROPERTY LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
