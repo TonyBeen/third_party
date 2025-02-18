@@ -10,7 +10,7 @@ add_subdirectory(yaml_cpp_V0_8_0)
 # add_subdirectory(zlib_V1_3)
 add_subdirectory(libraptorq)
 add_subdirectory(libcuckoo_master)
-add_subdirectory(libevent_V2_1_10)
+add_subdirectory(libevent)
 add_subdirectory(libmsgpack)
 
 # protobuf依赖zlib
