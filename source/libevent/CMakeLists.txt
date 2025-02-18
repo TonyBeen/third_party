@@ -52,16 +52,16 @@ add_subdirectory(libevent_V2_1_10)
 # 异步DNS解析库
 add_subdirectory(libares_V1_34_1)
 # nghttp2
-add_subdirectory(nghttp2_V1_61_0)
+# add_subdirectory(nghttp2_V1_61_0)
 
 # build the static library
 if(EVENT_STATIC_LIB MATCHES "ON")
     add_library(event_wrapper_static STATIC ${SOURCES} ${HEADERS})
     # add_library(event_wrapper::event_wrapper_static ALIAS event_wrapper_static)
 
-    # list(APPEND target_libraries event_wrapper_static)
+    list(APPEND target_libraries event_wrapper_static)
 
-    target_link_libraries(event_wrapper_static PRIVATE c-ares::cares_static event)
+    target_link_libraries(event_wrapper_static PRIVATE c-ares::cares_static event_static)
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
         target_link_libraries(event_wrapper_static PUBLIC pthread)
     endif()
@@ -96,7 +96,7 @@ if(EVENT_DYNAMIC_LIB MATCHES "ON")
 
     list(APPEND target_libraries event_wrapper)
 
-    target_link_libraries(event_wrapper PRIVATE c-ares::cares_static event)
+    target_link_libraries(event_wrapper PRIVATE c-ares::cares_static event_static)
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
         target_link_libraries(event_wrapper_static PUBLIC pthread)
     endif()

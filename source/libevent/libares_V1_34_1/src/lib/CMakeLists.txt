@@ -77,7 +77,6 @@ IF (CARES_SHARED)
 			)
 		ENDIF ()
 	ENDIF ()
-	SET (STATIC_SUFFIX "_static")
 
 	# For chain building: add alias targets that look like import libs that would be returned by find_package(c-ares).
 	ADD_LIBRARY (${PROJECT_NAME}::cares_shared ALIAS ${PROJECT_NAME})
@@ -86,6 +85,7 @@ ENDIF ()
 
 # Build the static library
 IF (CARES_STATIC)
+	SET (STATIC_SUFFIX "_static")
 	SET (LIBNAME ${PROJECT_NAME}${STATIC_SUFFIX})
 
 	ADD_LIBRARY (${LIBNAME} STATIC ${CSOURCES})
@@ -127,6 +127,11 @@ IF (CARES_STATIC)
 			${TARGETS_INST_DEST}
 		)
 	ENDIF ()
+
+	export(TARGETS ${LIBNAME}
+       FILE "${PROJECT_BINARY_DIR}/cares_staticTargets.cmake"
+       APPEND
+    )
 
 	# For chain building: add alias targets that look like import libs that would be returned by find_package(c-ares).
 	ADD_LIBRARY (${PROJECT_NAME}::cares_static ALIAS ${LIBNAME})
