@@ -59,7 +59,7 @@ if(EVENT_STATIC_LIB MATCHES "ON")
     add_library(event_wrapper_static STATIC ${SOURCES} ${HEADERS})
     # add_library(event_wrapper::event_wrapper_static ALIAS event_wrapper_static)
 
-    list(APPEND target_libraries event_wrapper_static)
+    # list(APPEND target_libraries event_wrapper_static)
 
     target_link_libraries(event_wrapper_static PRIVATE c-ares::cares_static event_static)
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
