@@ -57,9 +57,14 @@ add_subdirectory(libares_V1_34_1)
 # build the static library
 if(EVENT_STATIC_LIB MATCHES "ON")
     add_library(event_wrapper_static STATIC ${SOURCES} ${HEADERS})
-    # add_library(event_wrapper::event_wrapper_static ALIAS event_wrapper_static)
+    add_library(event_wrapper::event_wrapper_static ALIAS event_wrapper_static)
 
     # list(APPEND target_libraries event_wrapper_static)
+    target_include_directories(event_wrapper_static
+        PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+            $<INSTALL_INTERFACE:include>
+    )
 
     target_link_libraries(event_wrapper_static PRIVATE c-ares::cares_static event_static)
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
@@ -92,7 +97,7 @@ endif()
 #build dynamic library
 if(EVENT_DYNAMIC_LIB MATCHES "ON")
     add_library(event_wrapper SHARED ${SOURCES} ${HEADERS})
-    # add_library(event_wrapper::event_wrapper ALIAS event_wrapper)
+    add_library(event_wrapper::event_wrapper ALIAS event_wrapper)
 
     list(APPEND target_libraries event_wrapper)
 
