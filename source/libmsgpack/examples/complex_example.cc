@@ -5,7 +5,7 @@
     > Created Time: 2024年09月24日 星期二 10时35分17秒
  ************************************************************************/
 
-#include <msgpackpp.hpp>
+#include <msgpackpp/msgpackpp.hpp>
 
 struct PersonInfo
 {

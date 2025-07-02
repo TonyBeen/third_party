@@ -17,7 +17,7 @@
 #include <exception>
 
 #include <msgpack.h>
-#include <traits.hpp>
+#include <msgpackpp/traits.hpp>
 
 #define DATA_TYPE_MISMATCH(Type) \
     throw std::runtime_error(std::string(__FILE__) + ":" + std::to_string(__LINE__) + ", with [T = " + traits::ClassNameHelper<Type>::Name + "], data type mismatch");

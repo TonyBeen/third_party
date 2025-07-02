@@ -28,11 +28,13 @@ set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Installation d
 
 set(SOURCES	src/msgpackpp.cpp)
 set(HEADERS
-    include/msgpackpp.hpp
-    include/archive.hpp
-    include/traits.hpp)
+    include/msgpackpp/msgpackpp.hpp
+    include/msgpackpp/archive.hpp
+    include/msgpackpp/traits.hpp)
 
-set(CXX_FLAGS "-W -Wall -Werror -Wextra")
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    set(CXX_FLAGS "-W -Wall -Werror -Wextra")
+endif()
 
 # 添加依赖的库
 add_subdirectory(msgpack_c)
@@ -40,7 +42,7 @@ add_subdirectory(msgpack_c)
 # build the static library
 if(MSGPACK_STATIC_LIB MATCHES "ON")
     add_library(msgpack_static STATIC ${SOURCES} ${HEADERS})
-    # add_library(msgpack::msgpack_static ALIAS msgpack_static)
+    add_library(msgpack::msgpack ALIAS msgpack_static)
 
     # target_include_directories(msgpack_static PRIVATE ${RAPTORQ_INC_DIR})
     # target_include_directories(msgpack_static PRIVATE ${LIBRAPTORQ_INC_DIR})
@@ -52,7 +54,7 @@ if(MSGPACK_STATIC_LIB MATCHES "ON")
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}
     )
-    target_link_libraries(msgpack_static PUBLIC msgpack-c pthread)
+    target_link_libraries(msgpack_static PUBLIC msgpack-c)
 
     target_compile_options(
         msgpack_static PRIVATE
@@ -74,46 +76,58 @@ if(MSGPACK_STATIC_LIB MATCHES "ON")
     endif()
 endif()
 
-#build dynamic library
-if(MSGPACK_DYNAMIC_LIB MATCHES "ON")
-    add_library(msgpack SHARED ${SOURCES} ${HEADERS})
-    # add_library(msgpack::msgpack ALIAS msgpack)
+# msgpackpp纯头文件, 无动态库版本
+# build dynamic library
+# if(MSGPACK_DYNAMIC_LIB MATCHES "ON")
+#     add_library(msgpack SHARED ${SOURCES} ${HEADERS})
+#     add_library(msgpack::msgpack ALIAS msgpack)
 
-    target_include_directories(msgpack
-        PUBLIC
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-            $<INSTALL_INTERFACE:include>
-        PRIVATE
-            ${CMAKE_CURRENT_SOURCE_DIR}
-    )
+#     target_include_directories(msgpack
+#         PUBLIC
+#             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#             $<INSTALL_INTERFACE:include>
+#         PRIVATE
+#             ${CMAKE_CURRENT_SOURCE_DIR}
+#     )
 
-    target_link_libraries(msgpack PUBLIC msgpack-c pthread)
+#     target_link_libraries(msgpack PUBLIC msgpack-c pthread)
 
-    target_compile_options(
-        msgpack PRIVATE
-        ${CXX_COMPILER_FLAGS}
-    )
+#     target_compile_options(
+#         msgpack PRIVATE
+#         ${CXX_COMPILER_FLAGS}
+#     )
 
-    set_target_properties (
-        msgpack
-        PROPERTIES
-        LINK_FLAGS "-Wl,-z,now,-z,relro"
-    )
+#     set_target_properties (
+#         msgpack
+#         PROPERTIES
+#         LINK_FLAGS "-Wl,-z,now,-z,relro"
+#     )
 
-    set_property(TARGET msgpack PROPERTY LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+#     set_property(TARGET msgpack PROPERTY LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
-    if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL )
-        install(TARGETS msgpack
-            RUNTIME DESTINATION "${INSTALL_BIN_DIR}"
-            ARCHIVE DESTINATION "${INSTALL_LIB_DIR}"
-            LIBRARY DESTINATION "${INSTALL_LIB_DIR}" )
-    endif()
-endif()
+#     if(NOT SKIP_INSTALL_LIBRARIES AND NOT SKIP_INSTALL_ALL )
+#         install(TARGETS msgpack
+#             RUNTIME DESTINATION "${INSTALL_BIN_DIR}"
+#             ARCHIVE DESTINATION "${INSTALL_LIB_DIR}"
+#             LIBRARY DESTINATION "${INSTALL_LIB_DIR}" )
+#     endif()
+# endif()
 
 if(BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
 if(NOT SKIP_INSTALL_HEADERS AND NOT SKIP_INSTALL_ALL )
-    install(FILES ${HEADERS} DESTINATION "${INSTALL_INC_DIR}")
+    install(FILES ${HEADERS} DESTINATION "${INSTALL_INC_DIR}/msgpackpp")
+endif()
+
+# uninstall target
+if(NOT TARGET uninstall)
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/uninstall.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/uninstall.cmake"
+        IMMEDIATE @ONLY)
+
+    add_custom_target(uninstall
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/uninstall.cmake)
 endif()

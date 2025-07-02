@@ -15,7 +15,7 @@
 #include <unordered_map>
 #include <memory>
 
-#include <archive.hpp>
+#include <msgpackpp/archive.hpp>
 
 namespace msgpack {
 class MsgPackBinary : public OutputArchive<MsgPackBinary>
