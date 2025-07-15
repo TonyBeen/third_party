@@ -2233,7 +2233,8 @@
  *
  * This modules adds support for the AES-NI instructions on x86.
  */
-#define MBEDTLS_AESNI_C
+// NOTE 带上这个宏会导致RSA加密段错误
+// #define MBEDTLS_AESNI_C
 
 /**
  * \def MBEDTLS_AESCE_C
