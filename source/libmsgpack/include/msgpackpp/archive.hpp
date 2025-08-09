@@ -319,7 +319,7 @@ private:
         const msgpack_object &obj = _unpack.data;
         if (obj.type == MSGPACK_OBJECT_STR) {
             const msgpack_object_str &str = obj.via.str;
-            msg.append(str.ptr, str.size);
+            msg.append(reinterpret_cast<const CharT*>(str.ptr), str.size / sizeof(CharT));
         } else {
             DATA_TYPE_MISMATCH(traits::RemoveConstRef<decltype(msg)>);
         }
@@ -377,6 +377,7 @@ private:
                 internalProcess(objArray.ptr[i], msg[i]);
             }
         } else {
+            printf("obj.type = %d\n", obj.type);
             DATA_TYPE_MISMATCH(traits::RemoveConstRef<decltype(msg)>);
         }
     }

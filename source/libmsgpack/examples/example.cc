@@ -23,6 +23,7 @@ struct Example
     double db = 3.1415;
 
     std::string k = "Hello, World";
+    std::wstring ws = L"你好，世界";
     std::vector<std::string> l = { "info", "warn", "error"};
     std::list<std::string> m = { "INFO", "WARN", "ERROR"};
     std::map<std::string, uint32_t> n = {
@@ -41,13 +42,13 @@ struct Example
     template<typename Archive>
     void save(Archive &ar) const
     {
-        ar(a, b, c, d, e, f, g, h, i, j, fl, db, k, l, m, n, o);
+        ar(a, b, c, d, e, f, g, h, i, j, fl, db, k, ws, l, m, n, o);
     }
 
     template<typename Archive>
     void load(Archive &ar)
     {
-        ar(a, b, c, d, e, f, g, h, i, j, fl, db, k, l, m, n, o);
+        ar(a, b, c, d, e, f, g, h, i, j, fl, db, k, ws, l, m, n, o);
     }
 
     void reset()
@@ -65,6 +66,7 @@ struct Example
         this->fl = 0.0;
         this->db = 0.0;
         this->k.clear();
+        this->ws.clear();
         this->l.clear();
         this->m.clear();
         this->n.clear();
@@ -86,6 +88,7 @@ struct Example
             this->fl == other.fl &&
             this->db == other.db &&
             this->k == other.k &&
+            this->ws == other.ws &&
             this->l == other.l &&
             this->m == other.m &&
             this->n == other.n &&
