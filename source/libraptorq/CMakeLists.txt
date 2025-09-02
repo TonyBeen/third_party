@@ -43,6 +43,13 @@ include(GNUInstallDirs)
 set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Installation directory for libraries")
 set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Installation directory for headers")
 
+if(CMAKE_COMPILER_IS_MSVC)
+    # Strictest warnings, UTF-8 source and execution charset
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3 /utf-8")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /utf-8")
+endif(CMAKE_COMPILER_IS_MSVC)
+
+
 SET(SOURCES	
     src/decoder.cpp
     src/encoder.cpp

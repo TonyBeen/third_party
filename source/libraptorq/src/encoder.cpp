@@ -8,6 +8,7 @@
 #include "raptorq/encoder.h"
 
 #include <exception>
+#include <stdexcept>
 
 #include "raptorq/raptorq.h"
 
