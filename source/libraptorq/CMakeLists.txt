@@ -125,7 +125,7 @@ if(RAPTORQ_DYNAMIC_LIB MATCHES "ON")
     endif()
 endif()
 
-if(BUILD_EXAMPLES and CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+if(BUILD_EXAMPLES MATCHES "ON" AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_subdirectory(examples)
 endif()
 

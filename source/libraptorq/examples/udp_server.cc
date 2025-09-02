@@ -50,7 +50,7 @@ void SendSuccess(int32_t sock, const sockaddr_in &remote_host)
 int main(int argc, char **argv)
 {
     char c = '\x0';
-    uint16_t port = 12000;
+    uint16_t port = 8899;
     while ((c = getopt(argc, argv, "hp:")) > 0) {
         switch (c) {
         case 'p':

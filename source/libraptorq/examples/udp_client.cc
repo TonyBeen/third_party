@@ -23,8 +23,8 @@
 #include "raptorq/encoder.h"
 #include "crc32.h"
 
-const char *ch_remote_host = nullptr;
-uint16_t port = 0;
+const char *ch_remote_host = "127.0.0.1";
+uint16_t port = 8899;
 
 void PrintHelpMsg(const char *exe)
 {
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
     char c = '\x0';
     const char *file_path = nullptr;
     uint16_t piece_per_block = 8;
-    uint16_t repair_piece = 2;
+    uint16_t redundancy_piece = 2;
     while ((c = getopt(argc, argv, "hf:p:r:P:R:")) > 0) {
         switch (c) {
         case 'f':
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
             piece_per_block = static_cast<uint16_t>(atoi(optarg));
             break;
         case 'R':
-            repair_piece = static_cast<uint16_t>(atoi(optarg));
+            redundancy_piece = static_cast<uint16_t>(atoi(optarg));
             break;
         default:
             PrintHelpMsg(argv[0]);
@@ -115,7 +115,7 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    if (piece_per_block == 0 || repair_piece == 0) {
+    if (piece_per_block == 0 || redundancy_piece == 0) {
         return 0;
     }
 
@@ -202,7 +202,7 @@ int main(int argc, char **argv)
 
         file_crc = crc32(file_crc, file_data.data() + offset, read_size);
 
-        raptorq::Encoder raptorq_encoder(piece_per_block, PIECE_SIZE, repair_piece, file_data.data());
+        raptorq::Encoder raptorq_encoder(piece_per_block, PIECE_SIZE, redundancy_piece, file_data.data());
         raptorq_encoder.precompute(1);
         std::vector<uint32_t> piece_id_vec;
         std::vector<void *> piece_data_vec;
