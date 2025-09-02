@@ -316,37 +316,35 @@ endif()
 
 # build the static library
 if(STATIC_LIB MATCHES "ON")
-    add_library(RaptorQ_Static STATIC ${SOURCES} ${HEADERS})
-    add_library(RaptorQ::RaptorQ_Static ALIAS RaptorQ_Static)
-    add_definitions(-I${EIGEN3_INCLUDE_DIR})
+    add_library(RaptorQ_S STATIC ${SOURCES} ${HEADERS})
+    #add_definitions(-I${EIGEN3_INCLUDE_DIR})
 
     target_compile_options(
-        RaptorQ_Static PRIVATE
+        RaptorQ_S PRIVATE
         ${CXX_COMPILER_FLAGS}
     )
     if(LTO MATCHES "ON")
-        target_compile_options(RaptorQ_Static PRIVATE -flto)
+        target_compile_options(RaptorQ_S PRIVATE -flto)
     endif()
     if(PROFILING MATCHES "ON")
-        add_dependencies(RaptorQ_Static profile)
-        target_compile_options(RaptorQ_Static PRIVATE ${PROFILE_SET})
+        add_dependencies(RaptorQ_S profile)
+        target_compile_options(RaptorQ_S PRIVATE ${PROFILE_SET})
     endif()
     if (NOT RQ_LINKER MATCHES BSD)
         set_target_properties (
-            RaptorQ_Static
+            RaptorQ_S
             PROPERTIES
             LINK_FLAGS "-Wl,-z,now,-z,relro -pie ${LD_OPT}"
         )
     endif()
-    set_property(TARGET RaptorQ_Static PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-
+    set_property(TARGET RaptorQ_S PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
     # if(CMAKE_SYSTEM_NAME MATCHES "Windows")
     #     # not really deterministic?
     #     # don't know how to do that in Windows.
     #     add_custom_target(
     #         make_static_deterministic ALL
-    #         DEPENDS RaptorQ_Static
+    #         DEPENDS RaptorQ_S
     #     )
     # else()
     #     # make the library deterministic (only on *nix)
@@ -359,7 +357,7 @@ if(STATIC_LIB MATCHES "ON")
     #     add_custom_command(
     #         OUTPUT deterministic.run
     #         COMMAND make_deterministic ${CMAKE_BINARY_DIR}/lib/libRaptorQ.${RQ_ABI}.a
-    #         DEPENDS RaptorQ_Static
+    #         DEPENDS RaptorQ_S
     #         COMMENT "Removing creation date from library..."
     #         VERBATIM
     #     )
@@ -377,7 +375,6 @@ if(DYNAMIC_LIB MATCHES "ON")
     add_definitions(-DRAPTORQ_DLL_EXPORTS)
 
     add_library(RaptorQ SHARED ${SOURCES} ${HEADERS})
-    add_library(RaptorQ::RaptorQ ALIAS RaptorQ)
     target_include_directories(RaptorQ PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/external/eigen3/")
 
     target_compile_options(
@@ -444,7 +441,7 @@ endif()
 
 
 # install(FILES ${HEADERS} DESTINATION include/RaptorQ/)
-# install(TARGETS RaptorQ_Static
+# install(TARGETS RaptorQ_S
 #      LIBRARY DESTINATION lib COMPONENT libraries
 #      ARCHIVE DESTINATION lib COMPONENT libraries)
 

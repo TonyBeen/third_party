@@ -49,7 +49,6 @@ if(CMAKE_COMPILER_IS_MSVC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /utf-8")
 endif(CMAKE_COMPILER_IS_MSVC)
 
-
 SET(SOURCES	
     src/decoder.cpp
     src/encoder.cpp
@@ -60,7 +59,6 @@ SET(HEADERS
     include/raptorq/encoder.h
     include/raptorq/raptorq.h)
 
-set(CXX_FLAGS "-W -Wall -Werror -Wextra")
 set(RAPTORQ_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 set(LIBRAPTORQ_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libRaptorQ_v0_1_10/src)
 
@@ -75,8 +73,9 @@ if(RAPTORQ_STATIC_LIB MATCHES "ON")
     target_include_directories(raptorq_static PRIVATE ${RAPTORQ_INC_DIR})
     target_include_directories(raptorq_static PRIVATE ${LIBRAPTORQ_INC_DIR})
 
+    target_link_libraries(raptorq_static PRIVATE RaptorQ_S)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-        target_link_libraries(raptorq_static PRIVATE RaptorQ::RaptorQ_Static m pthread dl)
+        target_link_libraries(raptorq_static PRIVATE m pthread dl)
         set_target_properties (
             raptorq_static
             PROPERTIES
@@ -106,8 +105,9 @@ if(RAPTORQ_DYNAMIC_LIB MATCHES "ON")
     target_include_directories(raptorq PRIVATE ${RAPTORQ_INC_DIR})
     target_include_directories(raptorq PRIVATE ${LIBRAPTORQ_INC_DIR})
 
+    target_link_libraries(raptorq PRIVATE RaptorQ_S)
     if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-        target_link_libraries(raptorq PRIVATE RaptorQ::RaptorQ_Static m pthread dl)
+        target_link_libraries(raptorq PRIVATE m pthread dl)
         set_target_properties (
             raptorq
             PROPERTIES
