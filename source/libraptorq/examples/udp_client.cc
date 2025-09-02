@@ -192,13 +192,13 @@ int main(int argc, char **argv)
         // 发送 TransferFileBlockBegin 命令
         FileBlock file_block;
         file_block.block_id = file_id++;
-        auto read_size = fread(file_data.data() + offset, 1, BUFFER_SIZE, file_handle);
+        auto read_size = fread((char *)file_data.data() + offset, 1, BUFFER_SIZE, file_handle);
         if (read_size == 0) {
             break;
         }
 
         file_block.block_size = read_size;
-        memcpy(file_data.data(), &file_block, sizeof(file_block));
+        memcpy((void *)file_data.data(), &file_block, sizeof(file_block));
 
         file_crc = crc32(file_crc, file_data.data() + offset, read_size);
 

@@ -4,7 +4,7 @@ include(cmake/config.cmake)
 
 project(libraptorq VERSION ${RAPTORQ_VERSION})
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_C_STANDARD 11)
 
 # 生成 version 文件
