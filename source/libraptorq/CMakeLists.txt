@@ -43,11 +43,9 @@ include(GNUInstallDirs)
 set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Installation directory for libraries")
 set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Installation directory for headers")
 
-if(CMAKE_COMPILER_IS_MSVC)
-    # Strictest warnings, UTF-8 source and execution charset
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /W3 /utf-8")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W3 /utf-8")
-endif(CMAKE_COMPILER_IS_MSVC)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    add_compile_options(/utf-8)
+endif()
 
 SET(SOURCES	
     src/decoder.cpp
@@ -83,7 +81,6 @@ if(RAPTORQ_STATIC_LIB MATCHES "ON")
         )
     endif()
 
-    target_compile_options(raptorq_static PRIVATE ${CMAKE_CXX_FLAGS})
     set_property(TARGET raptorq_static PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
     set(RAPTOR_LIBRARIE raptorq_static CACHE INTERNAL "link raptorq librarie")
@@ -117,7 +114,6 @@ if(RAPTORQ_DYNAMIC_LIB MATCHES "ON")
         )
     endif()
 
-    target_compile_options(raptorq PRIVATE ${CMAKE_CXX_FLAGS})
     set_property(TARGET raptorq PROPERTY LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
     set(RAPTOR_LIBRARIE raptorq CACHE INTERNAL "link raptorq librarie")
@@ -129,7 +125,7 @@ if(RAPTORQ_DYNAMIC_LIB MATCHES "ON")
     endif()
 endif()
 
-if(BUILD_EXAMPLES)
+if(BUILD_EXAMPLES and CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     add_subdirectory(examples)
 endif()
 
