@@ -68,18 +68,14 @@ if(RAPTORQ_STATIC_LIB MATCHES "ON")
     target_include_directories(raptorq_static PRIVATE ${RAPTORQ_INC_DIR})
     target_include_directories(raptorq_static PRIVATE ${LIBRAPTORQ_INC_DIR})
 
-    target_link_libraries(raptorq_static PRIVATE RaptorQ::RaptorQ_Static m pthread dl)
-
-    target_compile_options(
-        raptorq_static PRIVATE
-        ${CXX_COMPILER_FLAGS}
-    )
-
-    set_target_properties (
-        raptorq_static
-        PROPERTIES
-        LINK_FLAGS "-Wl,-z,now,-z,relro -pie"
-    )
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_link_libraries(raptorq_static PRIVATE RaptorQ::RaptorQ_Static m pthread dl)
+        set_target_properties (
+            raptorq_static
+            PROPERTIES
+            LINK_FLAGS "-Wl,-z,now,-z,relro -pie"
+        )
+    endif()
     set_property(TARGET raptorq_static PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
     set(RAPTOR_LIBRARIE raptorq_static CACHE INTERNAL "link raptorq librarie")
@@ -103,19 +99,14 @@ if(RAPTORQ_DYNAMIC_LIB MATCHES "ON")
     target_include_directories(raptorq PRIVATE ${RAPTORQ_INC_DIR})
     target_include_directories(raptorq PRIVATE ${LIBRAPTORQ_INC_DIR})
 
-    target_link_libraries(raptorq PRIVATE RaptorQ::RaptorQ_Static m pthread dl)
-
-    target_compile_options(
-        raptorq PRIVATE
-        ${CXX_COMPILER_FLAGS}
-    )
-
-    set_target_properties (
-        raptorq
-        PROPERTIES
-        LINK_FLAGS "-Wl,-z,now,-z,relro"
-        VERSION ${RAPTORQ_VERSION}
-    )
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_link_libraries(raptorq PRIVATE RaptorQ::RaptorQ_Static m pthread dl)
+        set_target_properties (
+            raptorq
+            PROPERTIES
+            LINK_FLAGS "-Wl,-z,now,-z,relro"
+        )
+    endif()
 
     set_property(TARGET raptorq PROPERTY LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
