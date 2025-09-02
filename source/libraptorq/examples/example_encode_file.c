@@ -105,9 +105,10 @@ int main(int argc, char **argv)
 {
     const char *file_path = NULL;
     const char *output_file_path = "output.dat";
+    float loss_rate = 10.0f; // 默认丢失率为10%
     uint32_t piece_per_block = 16;
     char c = '\x0';
-    while ((c = getopt(argc, argv, "hf:p:o:")) > 0) {
+    while ((c = getopt(argc, argv, "hf:p:o:r:")) > 0) {
         switch (c) {
         case 'f':
             file_path = optarg;
@@ -120,6 +121,12 @@ int main(int argc, char **argv)
             break;
         case 'o':
             output_file_path = optarg;
+            break;
+        case 'r':
+            loss_rate = atof(optarg);
+            if (loss_rate <= 0.0f) {
+                loss_rate = 10.0f;
+            }
             break;
         case 'h':
             PrintHelpMsg(argv[0]);
@@ -147,7 +154,6 @@ int main(int argc, char **argv)
     }
 
     srand(time(NULL));
-    float loss_rate = 10.0f; // 默认丢失率为10%
     uint16_t lost_piece = 0;
     raptorq_t raptorq_handle = raptorq_create_decode(piece_per_block, piece_size);
     for (size_t i = 0; i < (piece_per_block + REPAIR_PIECE); ++i) {

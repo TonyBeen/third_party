@@ -30,11 +30,11 @@ extern "C" {
      *
      * @param piece_per_block 将这一块数据拆成多少piece
      * @param piece_size 每块piece大小(必须偶数大小)
-     * @param repair_piece 生成多少个修复piece
+     * @param redundancy_piece 冗余piece个数
      * @param block_data 数据缓存, 长度为piece_per_block * piece_size
      * @return raptorq_t 成功返回非NULL
      */
-    raptorq_t raptorq_create_encode(uint32_t piece_per_block, uint16_t piece_size, uint8_t repair_piece, const void *block_data);
+    raptorq_t raptorq_create_encode(uint32_t piece_per_block, uint16_t piece_size, uint8_t redundancy_piece, const void *block_data);
 
     /**
      * @brief 创建一个解码器
@@ -58,8 +58,8 @@ extern "C" {
      * @brief 编码数据, 如果没有调用raptorq_precompute, 则会阻塞直到计算完
      *
      * @param raptor_handle 编码器句柄
-     * @param encode_data 编码后的数据存放位置, 至少提供(piece_per_block + repair_piece)个piece_size大小的内存块
-     * @param id_vec 存放ID, id和encode_data一一对应, 数组容量至少(piece_per_block + repair_piece)
+     * @param encode_data 编码后的数据存放位置, 至少提供(piece_per_block + redundancy_piece)个piece_size大小的内存块
+     * @param id_vec 存放ID, id和encode_data一一对应, 数组容量至少(piece_per_block + redundancy_piece)
      * @return true 成功
      * @return false 失败
      */

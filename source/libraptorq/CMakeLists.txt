@@ -43,13 +43,15 @@ include(GNUInstallDirs)
 set(INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib" CACHE PATH "Installation directory for libraries")
 set(INSTALL_INC_DIR "${CMAKE_INSTALL_PREFIX}/include" CACHE PATH "Installation directory for headers")
 
-SET(SOURCES	src/decoder.cpp
-        src/encoder.cpp
-        src/raptorq.cpp)
+SET(SOURCES	
+    src/decoder.cpp
+    src/encoder.cpp
+    src/raptorq.cpp)
 
-SET(HEADERS	include/raptorq/decoder.h
-        include/raptorq/encoder.h
-        include/raptorq/raptorq.h)
+SET(HEADERS
+    include/raptorq/decoder.h
+    include/raptorq/encoder.h
+    include/raptorq/raptorq.h)
 
 set(CXX_FLAGS "-W -Wall -Werror -Wextra")
 set(RAPTORQ_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/cmake)

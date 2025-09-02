@@ -27,7 +27,7 @@ public:
     using Ptr = std::unique_ptr<Encoder>;
 
     Encoder();
-    Encoder(uint32_t piece_per_block, uint16_t piece_size, uint8_t repair_piece, const void *block_data);
+    Encoder(uint32_t piece_per_block, uint16_t piece_size, uint8_t redundancy_piece, const void *block_data);
     ~Encoder();
 
     /**
@@ -35,13 +35,13 @@ public:
      * 
      * @param piece_per_block 
      * @param piece_size 
-     * @param repair_piece 
+     * @param redundancy_piece 
      * @param block_data 
      * @return true 成功
      * @return false 失败
      */
     bool reset(uint32_t piece_per_block = 0, uint16_t piece_size = 0,
-               uint8_t repair_piece = 0, const void *block_data = nullptr);
+               uint8_t redundancy_piece = 0, const void *block_data = nullptr);
 
     /**
      * @brief 预处理数据

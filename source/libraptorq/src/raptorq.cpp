@@ -21,7 +21,7 @@ typedef struct _Raptorq
     uint32_t        type;
     uint32_t        piece_per_block;
     uint16_t        piece_size;
-    uint8_t         repair_piece;
+    uint8_t         redundancy_piece;
     RaptorQ_ptr*    raptorq_ptr;
 } SRaptorq;
 
@@ -30,7 +30,7 @@ const char *raptorq_version()
     return RAPTORQ_VERSION;
 }
 
-raptorq_t raptorq_create_encode(uint32_t piece_per_block, uint16_t piece_size, uint8_t repair_piece, const void *block_data)
+raptorq_t raptorq_create_encode(uint32_t piece_per_block, uint16_t piece_size, uint8_t redundancy_piece, const void *block_data)
 {
     if (block_data == NULL) {
         return NULL;
@@ -54,7 +54,7 @@ raptorq_t raptorq_create_encode(uint32_t piece_per_block, uint16_t piece_size, u
     encoder->type = RAPTOR_ENCODE;
     encoder->piece_per_block = piece_per_block;
     encoder->piece_size = piece_size;
-    encoder->repair_piece = repair_piece;
+    encoder->redundancy_piece = redundancy_piece;
     encoder->raptorq_ptr = RaptorQ_Enc(ENC_8, data, data_size, min_subsymbol_size, symbol_size, max_memory);
     if (encoder->raptorq_ptr == NULL) {
         free(encoder);
@@ -136,12 +136,13 @@ bool raptorq_encode(raptorq_t raptor_handle, void *encode_data[], uint32_t piece
     }
 
     uint32_t max_repair_symbol = RaptorQ_max_repair(raptorq->raptorq_ptr, sbn);
-    if (max_repair_symbol < raptorq->repair_piece) {
+    if (max_repair_symbol < raptorq->redundancy_piece) {
         return false;
     }
 
+    // NOTE 只获取修复符号
     uint32_t i = 0;
-    for (uint32_t source = 0; source < (src_symbols + raptorq->repair_piece); ++source, ++i) {
+    for (uint32_t source = src_symbols; source < (src_symbols + src_symbols + raptorq->redundancy_piece); ++source, ++i) {
         uint32_t esi = source;
         piece_id[i] = RaptorQ_id(esi, sbn);
         void *date_temp = encode_data[i];
