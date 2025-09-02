@@ -67,7 +67,7 @@ uint64_t erase (const uint64_t offset, std::fstream &lib)
 	lib.seekg (static_cast<int64_t> (offset + 48));
 	char size[10];
 	lib.read (size, 10);
-	for (ssize_t i = 9; i >= 0; --i) {
+	for (int32_t i = 9; i >= 0; --i) {
 		if (size[i] == pad)
 			size[i] = '\0';
 	}
