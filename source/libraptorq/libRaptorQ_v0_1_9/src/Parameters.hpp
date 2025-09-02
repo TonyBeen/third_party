@@ -62,6 +62,9 @@ private:
 	static bool is_prime (const uint16_t n);
 };
 
+RAPTORQ_API uint16_t extended_source_symbols (const uint16_t symbols);
+
+
 class RAPTORQ_LOCAL Octet
 {
 public:
@@ -135,7 +138,7 @@ public:
 		return lhs;
 	}
 	friend std::ostream &operator<< (std::ostream &os, Octet const &m) {
-		os << std::hex << static_cast<int32_t> (m.data) << std::dec;
+		os << std::hex << static_cast<ssize_t> (m.data) << std::dec;
 		return os;
 	}
 private:

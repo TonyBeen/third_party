@@ -3,9 +3,9 @@ set(Eigen_HEADERS AdolcForward AlignedVector3 ArpackSupport AutoDiff BVH FFT Ite
                   Skyline SparseExtra Splines
    )
 
-# install(FILES
-#   ${Eigen_HEADERS}
-#   DESTINATION ${INCLUDE_INSTALL_DIR}/unsupported/Eigen COMPONENT Devel
-#   )
+install(FILES
+  ${Eigen_HEADERS}
+  DESTINATION ${INCLUDE_INSTALL_DIR}/unsupported/Eigen COMPONENT Devel
+  )
 
 add_subdirectory(src)

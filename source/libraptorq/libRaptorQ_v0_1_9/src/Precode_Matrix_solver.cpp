@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Luca Fulchir<luca@fulchir.it>, All rights reserved.
+ * Copyright (c) 2015-2018, Luca Fulchir<luca@fulchir.it>, All rights reserved.
  *
  * This file is part of "libRaptorQ".
  *
@@ -157,7 +157,7 @@ void Precode_Matrix::decode_phase0 (const Bitmask &mask,
 	// symbols. And those have been compacted.
 
 	for (uint16_t rep_row = static_cast<uint16_t> (A.rows() -
-                                    static_cast<int32_t> (_repair_overhead));
+									static_cast<int32_t> (_repair_overhead));
 												rep_row < A.rows(); ++rep_row) {
 		auto depends = _params.get_idxs (static_cast<uint16_t> (
 															*r_esi + padding));
@@ -250,6 +250,8 @@ std::tuple<bool, uint16_t, uint16_t>
 			} else {
 				// non_zero > non_zero_tmp)
 				non_zero = non_zero_tmp;
+                                if (only_two_ones && non_zero == 1)
+                                    only_two_ones = false;
 				r_rows.clear();
 				r_rows.emplace_back (row, ones_idx[0]);
 			}
@@ -257,7 +259,7 @@ std::tuple<bool, uint16_t, uint16_t>
 			if (ones == 2) {
 				// track the maximum component in the graph
 				if (non_zero == 2) {
-					if (!tracking[row].first)	// if not HDPC row
+					if (!tracking[row + i].first)	// if not HDPC row
 						G.connect (ones_idx[0], ones_idx[1]);
 					if (!only_two_ones) {
 						// must keep only rows with two ones,
@@ -375,7 +377,7 @@ bool Precode_Matrix::decode_phase2 (DenseMtx &D, const uint16_t i,
 	// rfc 6330, pg 35
 
 	// U_Lower parameters (u x u):
-	const uint16_t row_start = i, row_end = static_cast<uint16_t> (_params.L);
+	const uint16_t row_start = i, row_end = static_cast<uint16_t> (A.rows());
 	const uint16_t col_start = static_cast<uint16_t> (A.cols() - u);
 	// try to bring U_Lower to Identity with gaussian elimination.
 	// remember that all row swaps affect A as well, not just U_Lower
@@ -384,6 +386,8 @@ bool Precode_Matrix::decode_phase2 (DenseMtx &D, const uint16_t i,
 		// make sure the considered row has nonzero on the diagonal
 		uint16_t row_nonzero = row;
 		const uint16_t col_diag = col_start + (row - row_start);
+		if (col_diag >= _params.L)
+			break;
 		for (; row_nonzero < row_end; ++row_nonzero) {
 			if (static_cast<uint8_t> (A (row_nonzero, col_diag)) != 0) {
 				break;
@@ -477,18 +481,18 @@ void Precode_Matrix::decode_phase4 (DenseMtx &D, const uint16_t i,
 void Precode_Matrix::decode_phase5 (DenseMtx &D, const uint16_t i)
 {
 	// rc 6330, pg 36
-	for (uint16_t j = 0; j <= i; ++j) {
+	for (uint16_t j = 0; j < i; ++j) {
 		if (static_cast<uint8_t> (A (j, j)) != 1) {
 			// A(j, j) is actually never 0, by construction.
 			const auto multiple = A (j, j);
 			A.row (j) /= multiple;
 			D.row (j) /= multiple;
 		}
-		for (uint16_t tmp = 0; tmp < j; ++tmp) {	//tmp == "l" in rfc6330
-			const auto multiple = A (j, tmp);
+		for (uint16_t col = 0; col < j; ++col) {	// col == "l" in rfc6330
+			const auto multiple = A (j, col);
 			if (static_cast<uint8_t> (multiple) != 0) {
-				A.row (j) += A.row (tmp) * multiple;
-				D.row (j) += D.row (tmp) * multiple;
+				A.row (j) += A.row (col) * multiple;
+				D.row (j) += D.row (col) * multiple;
 			}
 		}
 	}

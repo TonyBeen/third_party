@@ -11,9 +11,9 @@ foreach(f ${Eigen_directory_files})
   endif()
 endforeach(f ${Eigen_directory_files})
 
-# install(FILES
-#   ${Eigen_directory_files_to_install}
-#   DESTINATION ${INCLUDE_INSTALL_DIR}/Eigen COMPONENT Devel
-#   )
+install(FILES
+  ${Eigen_directory_files_to_install}
+  DESTINATION ${INCLUDE_INSTALL_DIR}/Eigen COMPONENT Devel
+  )
 
 add_subdirectory(src)

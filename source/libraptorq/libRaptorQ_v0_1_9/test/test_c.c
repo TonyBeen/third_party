@@ -240,7 +240,7 @@ bool decode (uint32_t mysize, float drop_prob, uint8_t overhead)
 	if ((RaptorQ_bytes (dec) % sizeof(uint32_t)) != 0)
 		++decoded_size;
 	uint32_t *received = (uint32_t *) malloc (
-                                    (size_t) decoded_size * sizeof(uint32_t));
+									(size_t) decoded_size * sizeof(uint32_t));
 
 	uint32_t *rec = received;
 	// you can actually call "RaptorQ_decode" as many times as you want
@@ -264,7 +264,7 @@ bool decode (uint32_t mysize, float drop_prob, uint8_t overhead)
 		printf("Decoded: %i\n", mysize);
 	}
 	// check if everything was decoded nicely
-	for (uint16_t i = 0; i < mysize; ++i) {
+	for (size_t i = 0; i < mysize; ++i) {
 		if (myvec[i] != received[i]) {
 			fprintf(stderr, "FAILED, but we though otherwise! %i - %f: %i "
 													"%i -- %i\n",

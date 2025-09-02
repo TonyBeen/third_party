@@ -31,9 +31,11 @@
 /////////////////////
 
 #include "Interleaver.hpp"
+#include "Parameters.hpp"
 #include "De_Interleaver.hpp"
 #include "Encoder.hpp"
 #include "Decoder.hpp"
+#include "endianness.hpp"
 #include <map>
 #include <mutex>
 #include <thread>
@@ -60,7 +62,7 @@ public:
 	{
 		uint32_t ret = _sbn;
 		ret <<= 24;
-		return ret + _esi;
+		return RaptorQ::Impl::Endian::h_to_b<uint32_t> (ret + _esi);
 	}
 private:
 	Encoder<Rnd_It, Fwd_It> *_enc;
@@ -207,14 +209,16 @@ public:
 	Encoder (const Rnd_It data_from, const Rnd_It data_to,
 											const uint16_t min_subsymbol_size,
 											const uint16_t symbol_size,
-											const size_t max_memory)
-		: _mem (max_memory), _data_from (data_from), _data_to (data_to),
+											const size_t max_sub_block)
+		: _max_sub_blk (max_sub_block), _data_from (data_from),
+											_data_to (data_to),
 											_symbol_size (symbol_size),
 											_min_subsymbol (min_subsymbol_size)
 	{
 		IS_RANDOM(Rnd_It, "RaptorQ::Encoder");
 		IS_FORWARD(Fwd_It, "RaptorQ::Encoder");
-		auto _alignment = sizeof(typename std::iterator_traits<Rnd_It>::value_type);
+		auto _alignment = sizeof(typename
+									std::iterator_traits<Rnd_It>::value_type);
 		UNUSED(_alignment);	// used only for asserts
 		assert(_symbol_size >= _alignment &&
 						"RaptorQ: symbol_size must be >= alignment");
@@ -236,9 +240,10 @@ public:
 		}
 		interleave = std::unique_ptr<Impl::Interleaver<Rnd_It>> (
 								new Impl::Interleaver<Rnd_It> (_data_from,
-														_data_to,
-														_min_subsymbol, _mem,
-														_symbol_size));
+																_data_to,
+																_min_subsymbol,
+																_max_sub_blk,
+																_symbol_size));
 		if (!(*interleave))
 			interleave = nullptr;
 	}
@@ -286,7 +291,7 @@ private:
 	std::unique_ptr<Impl::Interleaver<Rnd_It>> interleave = nullptr;
 	std::map<uint8_t, std::shared_ptr<Locked_Encoder>> encoders;
 	std::mutex _mtx;
-	const size_t _mem;
+	const size_t _max_sub_blk;
 	const Rnd_It _data_from, _data_to;
 	const uint16_t _symbol_size;
 	const uint16_t _min_subsymbol;
@@ -333,15 +338,18 @@ public:
 		IS_INPUT(In_It, "RaptorQ::Decoder");
 		IS_FORWARD(Fwd_It, "RaptorQ::Decoder");
 
+		OTI_Common_Data _common = RaptorQ::Impl::Endian::b_to_h<OTI_Common_Data>
+																	(common);
+		OTI_Scheme_Specific_Data _scheme = RaptorQ::Impl::Endian::b_to_h<
+											OTI_Scheme_Specific_Data> (scheme);
 		// see the above commented bitfields for quick reference
-		_symbol_size = static_cast<uint16_t> (common);
-		uint16_t tot_sub_blocks = static_cast<uint16_t> (scheme >> 8);
-		_alignment = static_cast<uint8_t> (scheme);
-		_sub_blocks = Impl::Partition (_symbol_size /
-												static_cast<uint8_t> (scheme),
+		_symbol_size = static_cast<uint16_t> (_common);
+		uint16_t tot_sub_blocks = static_cast<uint16_t> (_scheme >> 8);
+		_alignment = static_cast<uint8_t> (_scheme);
+		_sub_blocks = Impl::Partition (_symbol_size / _alignment,
 																tot_sub_blocks);
-		_blocks = static_cast<uint8_t> (scheme >> 24);
-		_size = common >> 24;
+		_blocks = static_cast<uint8_t> (_scheme >> 24);
+		_size = _common >> 24;
 		//	(common >> 24) == total file size
 		if (_size > max_data)
 			return;
@@ -419,7 +427,7 @@ OTI_Common_Data Encoder<Rnd_It, Fwd_It>::OTI_Common() const
 	// last 16 bits: symbol size
 	ret += _symbol_size;
 
-	return ret;
+	return RaptorQ::Impl::Endian::h_to_b<OTI_Common_Data> (ret);
 }
 
 template <typename Rnd_It, typename Fwd_It>
@@ -435,7 +443,7 @@ OTI_Scheme_Specific_Data Encoder<Rnd_It, Fwd_It>::OTI_Scheme_Specific() const
 	// 8 bit: alignment
 	ret += sizeof(typename std::iterator_traits<Rnd_It>::value_type);
 
-	return ret;
+	return RaptorQ::Impl::Endian::h_to_b<OTI_Scheme_Specific_Data> (ret);
 }
 
 template <typename Rnd_It, typename Fwd_It>
@@ -560,10 +568,11 @@ template <typename Rnd_It, typename Fwd_It>
 uint64_t Encoder<Rnd_It, Fwd_It>::encode (Fwd_It &output, const Fwd_It end,
 															const uint32_t &id)
 {
-	const uint32_t mask_8 = static_cast<uint32_t> (std::pow (2, 8)) - 1;
-	const uint32_t mask = ~(mask_8 << 24);
+	constexpr uint32_t mask = ~(static_cast<uint32_t>(0xFF) << 24);
+	uint32_t host_endian_id = RaptorQ::Impl::Endian::b_to_h<uint32_t> (id);
 
-	return encode (output, end, id & mask, static_cast<uint8_t> (id & mask_8));
+	return encode (output, end, host_endian_id & mask,
+								static_cast<uint8_t> (host_endian_id >> 24));
 }
 
 template <typename Rnd_It, typename Fwd_It>
@@ -575,6 +584,10 @@ uint64_t Encoder<Rnd_It, Fwd_It>::encode (Fwd_It &output, const Fwd_It end,
 		return 0;
 	if (sbn >= interleave->blocks())
 		return 0;
+	const uint16_t syms = interleave->source_symbols (sbn);
+	const uint16_t padding = Impl::extended_source_symbols (syms) - syms;
+	const uint16_t real_esi = esi < syms ? esi : esi + padding;
+
 	_mtx.lock();
 	auto it = encoders.find (sbn);
 	if (it == encoders.end()) {
@@ -585,14 +598,14 @@ uint64_t Encoder<Rnd_It, Fwd_It>::encode (Fwd_It &output, const Fwd_It end,
 	}
 	auto enc_ptr = it->second;
 	_mtx.unlock();
-	if (esi >= interleave->source_symbols (sbn)) {
+	if (esi >= syms) {
 		// make sure we generated the intermediate symbols
 		enc_ptr->_mtx.lock();
 		enc_ptr->_enc.generate_symbols();
 		enc_ptr->_mtx.unlock();
 	}
 
-	return enc_ptr->_enc.Enc (esi, output, end);
+	return enc_ptr->_enc.Enc (real_esi, output, end);
 }
 
 
@@ -666,8 +679,9 @@ template <typename In_It, typename Fwd_It>
 bool Decoder<In_It, Fwd_It>::add_symbol (In_It &start, const In_It end,
 															const uint32_t id)
 {
-	uint32_t esi = (id << 8 ) >> 8;
-	uint8_t sbn = id >> 24;
+	uint32_t host_endian_id = RaptorQ::Impl::Endian::b_to_h<uint32_t> (id);
+	uint32_t esi = host_endian_id & 0x00FFFFFF;
+	uint8_t sbn = host_endian_id >> 24;
 
 	return add_symbol (start, end, esi, sbn);
 }
@@ -679,6 +693,11 @@ bool Decoder<In_It, Fwd_It>::add_symbol (In_It &start, const In_It end,
 {
 	if (sbn >= _blocks)
 		return false;
+
+	const uint16_t syms = symbols (sbn);
+	const uint16_t padding = Impl::extended_source_symbols (syms) - syms;
+	const uint16_t real_esi = esi < syms ? esi : esi + padding;
+
 	_mtx.lock();
 	auto it = decoders.find (sbn);
 	if (it == decoders.end()) {
@@ -686,12 +705,13 @@ bool Decoder<In_It, Fwd_It>::add_symbol (In_It &start, const In_It end,
 													part.size(0) : part.size(1);
 		decoders.insert ({sbn, std::make_shared<Impl::Decoder<In_It>> (
 													symbols, _symbol_size)});
+
 		it = decoders.find (sbn);
 	}
 	auto dec = it->second;
 	_mtx.unlock();
 
-	return dec->add_symbol (start, end, esi);
+	return dec->add_symbol (start, end, real_esi);
 }
 
 template <typename In_It, typename Fwd_It>
@@ -723,7 +743,9 @@ uint64_t Decoder<In_It, Fwd_It>::decode (Fwd_It &start, const Fwd_It end)
 		auto dec = it->second;
 		_mtx.unlock();
 		Impl::De_Interleaver<Fwd_It> de_interleaving (dec->get_symbols(),
-													_sub_blocks, _alignment);
+																_sub_blocks,
+																symbols (sbn),
+																_alignment);
 		auto tmp_start = start;
 		uint64_t tmp_written = de_interleaving (tmp_start, end, skip);
 		if (tmp_written == 0)
@@ -741,10 +763,10 @@ uint64_t Decoder<In_It, Fwd_It>::decode (Fwd_It &start, const Fwd_It end)
 			// moreover, RaptorQ handles at most 881GB per rfc, so
 			// casting uint64 to int64 is safe
 			// we can not do "--start" since it's a forward iterator
-            #pragma clang diagnostic push
-            #pragma clang diagnostic ignored "-Wshorten-64-to-32"
+			#pragma clang diagnostic push
+			#pragma clang diagnostic ignored "-Wshorten-64-to-32"
 			start += static_cast<int64_t> (tmp_written - 1);
-            #pragma clang diagnostic pop
+			#pragma clang diagnostic pop
 		}
 	}
 	return written;
@@ -770,7 +792,9 @@ uint64_t Decoder<In_It, Fwd_It>::decode (Fwd_It &start, const Fwd_It end,
 		return 0;
 
 	Impl::De_Interleaver<Fwd_It> de_interleaving (dec->get_symbols(),
-													_sub_blocks, _alignment);
+																_sub_blocks,
+																symbols (sbn),
+																_alignment);
 	return de_interleaving (start, end);
 }
 

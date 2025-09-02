@@ -20,6 +20,7 @@
 
 #include "cRaptorQ.h"
 #include "RaptorQ.hpp"
+#include "endianness.hpp"
 #include <memory>
 
 struct RAPTORQ_LOCAL RaptorQ_ptr
@@ -111,7 +112,7 @@ struct RaptorQ_ptr *RaptorQ_Enc (const RaptorQ_type type, void *data,
 											const uint64_t size,
 											const uint16_t min_subsymbol_size,
 											const uint16_t symbol_size,
-											const size_t max_memory)
+											const size_t max_sub_block)
 {
 	std::unique_ptr<RaptorQ_ptr> ret (new RaptorQ_ptr (type));
 
@@ -123,7 +124,7 @@ struct RaptorQ_ptr *RaptorQ_Enc (const RaptorQ_type type, void *data,
 									reinterpret_cast<uint8_t*> (data) + size,
 									min_subsymbol_size,
 									symbol_size,
-									max_memory));
+									max_sub_block));
 		break;
 	case RaptorQ_type::ENC_16:
 		ret->ptr = reinterpret_cast<void *> (
@@ -132,7 +133,7 @@ struct RaptorQ_ptr *RaptorQ_Enc (const RaptorQ_type type, void *data,
 									reinterpret_cast<uint16_t*> (data) + size,
 									min_subsymbol_size,
 									symbol_size,
-									max_memory));
+									max_sub_block));
 		break;
 	case RaptorQ_type::ENC_32:
 		ret->ptr = reinterpret_cast<void *> (
@@ -141,7 +142,7 @@ struct RaptorQ_ptr *RaptorQ_Enc (const RaptorQ_type type, void *data,
 									reinterpret_cast<uint32_t*> (data) + size,
 									min_subsymbol_size,
 									symbol_size,
-									max_memory));
+									max_sub_block));
 		break;
 	case RaptorQ_type::ENC_64:
 		ret->ptr = reinterpret_cast<void *> (
@@ -150,7 +151,7 @@ struct RaptorQ_ptr *RaptorQ_Enc (const RaptorQ_type type, void *data,
 									reinterpret_cast<uint64_t*> (data) + size,
 									min_subsymbol_size,
 									symbol_size,
-									max_memory));
+									max_sub_block));
 		break;
 	case RaptorQ_type::DEC_8:
 	case RaptorQ_type::DEC_16:
@@ -533,8 +534,9 @@ void RaptorQ_precompute (RaptorQ_ptr *enc, const uint8_t threads,
 uint64_t RaptorQ_encode_id (RaptorQ_ptr *enc, void **data, const uint64_t size,
 															const uint32_t id)
 {
-	uint8_t sbn = id >> 24;
-	uint32_t esi = (id << 8) >> 8;
+	uint32_t host_endian_id = RaptorQ::Impl::Endian::b_to_h<uint32_t> (id);
+	uint8_t sbn = host_endian_id >> 24;
+	uint32_t esi = host_endian_id & 0x00FFFFFF;
 	return RaptorQ_encode (enc, data, size, esi, sbn);
 }
 
@@ -587,8 +589,8 @@ uint64_t RaptorQ_encode (RaptorQ_ptr *enc, void **data, const uint64_t size,
 uint32_t RaptorQ_id (const uint32_t esi, const uint8_t sbn)
 {
 	uint32_t ret = static_cast<uint32_t> (sbn) << 24;
-	ret += esi % static_cast<uint32_t> (std::pow (2, 24));
-	return ret;
+	ret += esi & 0x00FFFFFF;
+	return RaptorQ::Impl::Endian::h_to_b<uint32_t> (ret);
 }
 
 
@@ -727,8 +729,9 @@ uint64_t RaptorQ_decode_block (RaptorQ_ptr *dec, void **data, const size_t size,
 bool RaptorQ_add_symbol_id (RaptorQ_ptr *dec, void **data, const uint32_t size,
 															const uint32_t id)
 {
-	uint8_t sbn = id >> 24;
-	uint32_t esi = (id << 8) >> 8;
+	const uint32_t host_endian_id = RaptorQ::Impl::Endian::b_to_h<uint32_t>(id);
+	uint8_t sbn = host_endian_id >> 24;
+	uint32_t esi = host_endian_id & 0x00FFFFFF;
 	return RaptorQ_add_symbol (dec, data, size, esi, sbn);
 }
 

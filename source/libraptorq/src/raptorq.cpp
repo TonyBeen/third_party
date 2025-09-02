@@ -16,7 +16,7 @@
 #define RAPTOR_ENCODE   1
 #define RAPTOR_DECODE   2
 
-typedef struct _Raptorq
+typedef struct RAPTORQ_LOCAL _Raptorq
 {
     uint32_t        type;
     uint32_t        piece_per_block;

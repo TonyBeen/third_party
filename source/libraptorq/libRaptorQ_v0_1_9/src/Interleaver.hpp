@@ -108,7 +108,7 @@ template <typename T>
 class RAPTORQ_LOCAL Symbol_Wrap
 {
 public:
-	Symbol_Wrap (const uint8_t *raw, const uint16_t size) : _raw (raw),
+	Symbol_Wrap (uint8_t *const raw, const uint16_t size) : _raw (raw),
 																	_size (size)
 	{}
 
@@ -151,7 +151,7 @@ public:
 		return *this;
 	}
 private:
-	uint8_t *_raw = nullptr;
+	uint8_t *const _raw = nullptr;
 	const uint16_t _size;
 };
 
@@ -207,10 +207,10 @@ public:
 					_symbol_id * _sub_blocks.size (1) +	// get right subsymbol
 					pos_part2 % _sub_blocks.size (1);	// get right alignment
 		}
-        #pragma clang diagnostic push
-        #pragma clang diagnostic ignored "-Wshorten-64-to-32"
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Wshorten-64-to-32"
 		auto data = _data_from + static_cast<int64_t>(i);
-        #pragma clang diagnostic pop
+		#pragma clang diagnostic pop
 		if (data >= _data_to) {
 			// Padding. remember to cast it to the same time as the iterator
 			// value
@@ -370,7 +370,7 @@ template <typename Rnd_It>
 Interleaver<Rnd_It>::Interleaver (const Rnd_It data_from,
 											const Rnd_It data_to,
 											const uint16_t min_subsymbol_size,
-											const size_t max_block_decodable,
+											const size_t max_sub_block,
 											const uint16_t symbol_size)
 	:_data_from (data_from), _data_to (data_to), _symbol_size (symbol_size),
 		_alignment (sizeof(typename std::iterator_traits<Rnd_It>::value_type))
@@ -410,7 +410,7 @@ Interleaver<Rnd_It>::Interleaver (const Rnd_It data_from,
 	sizes.reserve (N_max);
 	// find our KL(n), for each n
 	for (tmp = 1; tmp <= N_max; ++tmp) {
-		auto upper_bound = max_block_decodable / (_alignment *
+		auto upper_bound = max_sub_block / (_alignment *
 									div_ceil (_symbol_size, _alignment * tmp));
 		size_t idx;
 		for (idx = 0; idx < RaptorQ::Impl::K_padded.size(); ++idx) {

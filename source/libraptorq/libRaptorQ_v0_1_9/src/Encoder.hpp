@@ -164,7 +164,7 @@ uint64_t Encoder<Rnd_It, Fwd_It>::Enc (const uint32_t ESI, Fwd_It &output,
 		using T = typename std::iterator_traits<Fwd_It>::value_type;
 		T al = static_cast<T> (0);
 		uint8_t *p = reinterpret_cast<uint8_t *>  (&al);
-		for (int32_t i = 0; i < tmp.cols(); ++i) {
+		for (ssize_t i = 0; i < tmp.cols(); ++i) {
 			*p = static_cast<uint8_t> (tmp (0, i));
 			++p;
 			if (p == reinterpret_cast<uint8_t *>  (&al) + sizeof(T)) {

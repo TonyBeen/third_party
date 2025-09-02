@@ -67,7 +67,7 @@ uint64_t erase (const uint64_t offset, std::fstream &lib)
 	lib.seekg (static_cast<int64_t> (offset + 48));
 	char size[10];
 	lib.read (size, 10);
-	for (int32_t i = 9; i >= 0; --i) {
+	for (ssize_t i = 9; i >= 0; --i) {
 		if (size[i] == pad)
 			size[i] = '\0';
 	}
@@ -87,9 +87,9 @@ int main (const int argc, const char **argv)
 	}
 
 	std::string filename (argv[1]);
-    std::fstream lib;
+	std::fstream lib;
 
-    lib.open (filename);
+	lib.open (filename);
 	if (!lib.is_open()) {
 		std::cout << "Can not open the library\n";
 		std::cout << "Usage: " << argv[0] << " static_library.a\n";
