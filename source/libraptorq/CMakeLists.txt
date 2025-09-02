@@ -82,6 +82,8 @@ if(RAPTORQ_STATIC_LIB MATCHES "ON")
             LINK_FLAGS "-Wl,-z,now,-z,relro -pie"
         )
     endif()
+
+    target_compile_options(raptorq_static PRIVATE ${CMAKE_CXX_FLAGS})
     set_property(TARGET raptorq_static PROPERTY ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
     set(RAPTOR_LIBRARIE raptorq_static CACHE INTERNAL "link raptorq librarie")
@@ -115,6 +117,7 @@ if(RAPTORQ_DYNAMIC_LIB MATCHES "ON")
         )
     endif()
 
+    target_compile_options(raptorq PRIVATE ${CMAKE_CXX_FLAGS})
     set_property(TARGET raptorq PROPERTY LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
     set(RAPTOR_LIBRARIE raptorq CACHE INTERNAL "link raptorq librarie")

@@ -11,9 +11,11 @@
 #include <vector>
 #include <memory>
 
+#include <raptorq/raptorq.h>
+
 namespace raptorq {
 struct EncoderPrivate;
-class Encoder
+class RQ_API Encoder
 {
     // disallow copy and move constructor
     Encoder(const Encoder&) = default;

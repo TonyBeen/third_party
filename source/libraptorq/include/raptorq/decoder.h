@@ -10,10 +10,13 @@
 
 #include <vector>
 #include <memory>
+#include <string>
+
+#include <raptorq/raptorq.h>
 
 namespace raptorq {
 struct DecoderPrivate;
-class Decoder
+class RQ_API Decoder
 {
     // disallow copy and move constructor
     Decoder(const Decoder&) = default;
