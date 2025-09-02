@@ -55,10 +55,10 @@ SET(HEADERS
 
 set(CXX_FLAGS "-W -Wall -Werror -Wextra")
 set(RAPTORQ_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
-set(LIBRAPTORQ_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libRaptorQ_v0_1_9/src)
+set(LIBRAPTORQ_INC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libRaptorQ_v0_1_10/src)
 
 # 添加依赖的库
-add_subdirectory(libRaptorQ_v0_1_9)
+add_subdirectory(libRaptorQ_v0_1_10)
 
 # build the static library
 if(RAPTORQ_STATIC_LIB MATCHES "ON")
