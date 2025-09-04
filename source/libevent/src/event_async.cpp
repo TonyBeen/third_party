@@ -51,7 +51,7 @@ void EventAsync::stop() noexcept
 
 bool EventAsync::addAsync(const std::string &name, AsyncCallback cb)
 {
-    if (cb == nullptr) {
+    if (name.empty() || cb == nullptr) {
         return false;
     }
 
